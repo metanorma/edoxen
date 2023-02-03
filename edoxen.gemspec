@@ -5,11 +5,11 @@ require_relative "lib/edoxen/version"
 Gem::Specification.new do |spec|
   spec.name = "edoxen"
   spec.version = Edoxen::VERSION
-  spec.authors = ['Ribose Inc.']
-  spec.email = ['open.source@ribose.com']
+  spec.authors = ["Ribose Inc."]
+  spec.email = ["open.source@ribose.com"]
 
   spec.summary = "Reader/writer for the Edoxen resolutions information models."
-  spec.description = %q{see --help}
+  spec.description = "see --help"
   spec.homepage = "https://github.com/metanorma/edoxen"
   spec.license = "BSD-2-Clause"
   spec.required_ruby_version = ">= 2.6.0"
