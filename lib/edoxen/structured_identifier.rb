@@ -1,0 +1,4 @@
+# StructuredIdentifier {
+#   number:
+#   prefix:
+# }
