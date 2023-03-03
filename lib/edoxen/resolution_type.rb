@@ -17,3 +17,22 @@
 #   decision
 #   declaration
 # }
+require "shale"
+require "shale/type/value"
+
+module Edoxen
+  class ConsiderationTypeEnumInvalidValue < TypeError; end
+
+  class ResolutionTypeEnum < Shale::Type::Value
+    ALLOWED_VALUES = ['resolution', 'recommendation', 'decision', 'declaration'].freeze
+
+    def self.cast(value)
+      if ALLOWED_VALUES.include?(value.to_s)
+        value.to_sym
+      else
+        raise ConsiderationTypeEnumInvalidValue, "#{value.inspect} is not a valid resolution type"
+      end
+    end
+
+  end
+end

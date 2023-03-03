@@ -1,5 +1,7 @@
 module Edoxen
-  class Resolution
+
+
+  class Resolution < Shale::Mapper
 
     # Example of a Resolution
     # category: Resolutions related to JWG 1
