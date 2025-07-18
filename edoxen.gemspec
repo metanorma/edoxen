@@ -10,7 +10,11 @@ Gem::Specification.new do |spec|
 
   spec.summary = "Edoxen is a set of information models used for representing resolution and decision information."
   spec.description = <<~HEREDOC
-    Edoxen provides a Ruby library for working with resolution models, allowing users to create, manipulate, and serialize resolution data in a structured format. It is built on top of the lutaml-model serialization framework, which provides a flexible and extensible way to define data models and serialize them to YAML or JSON formats.
+    Edoxen provides a Ruby library for working with resolution models, allowing
+    users to create, manipulate, and serialize resolution data in a structured
+    format. It is built on top of the lutaml-model serialization framework,
+    which provides a flexible and extensible way to define data models and
+    serialize them to YAML or JSON formats.
   HEREDOC
 
   spec.homepage = "https://github.com/metanorma/edoxen"
