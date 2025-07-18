@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # class ResolutionRelation {
 #   source: StructuredIdentifier (Resolution)
 #   destination: StructuredIdentifier (Resolution)
@@ -30,19 +32,20 @@
 #   }
 # }
 
+require "lutaml/model"
+
 module Edoxen
-  class ResolutionRelationinvalidValue < TypeError; end
+  class ResolutionRelationship < Lutaml::Model::Serializable
+    RESOLUTION_RELATIONSHIP_ENUM = %w[annexOf hasAnnex updates refines replaces obsoletes considers].freeze
 
-  class ResolutionRelationshipEnum < Shale::Type::Value
-    ALLOWED_VALUES = ['annexOf', 'hasAnnex', 'updates', 'refines', 'replaces', 'obsoletes', 'considers'].freeze
+    attribute :source, :string
+    attribute :destination, :string
+    attribute :type, :string, values: RESOLUTION_RELATIONSHIP_ENUM
 
-    def self.cast(value)
-      if ALLOWED_VALUES.include?(value.to_s)
-        value.to_sym
-      else
-        raise ResolutionRelationinvalidValue, "#{value.inspect} is not a valid resolution relation"
-      end
+    key_value do
+      map "source", to: :source
+      map "destination", to: :destination
+      map "type", to: :type
     end
-
   end
 end

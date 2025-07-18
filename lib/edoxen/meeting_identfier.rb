@@ -1,13 +1,19 @@
+# frozen_string_literal: true
+
 # MeetingIdentifier {
 #   venue: String
 #   date: DateTime
 # }
-require "shale"
-require "shale/type/value"
+require "lutaml/model"
 
 module Edoxen
-  class MeetingIdentifier < Shale::Mapper
-    attribute :venue, Shale::Type::String
-    attribute :date, Shale::Type::Date
+  class MeetingIdentifier < Lutaml::Model::Serializable
+    attribute :venue, :string
+    attribute :date, :date
+
+    key_value do
+      map "venue", to: :venue
+      map "date", to: :date
+    end
   end
 end

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # Consideration {
 #   type: ConsiderationType
 #   dateEffective: Date
@@ -25,30 +27,22 @@
 #   reaffirming
 # }
 
-require "shale"
-require "shale/type/value"
+require "lutaml/model"
+
 module Edoxen
-  class ConsiderationTypeEnumInvalidValue < TypeError; end
+  class Consideration < Lutaml::Model::Serializable
+    CONSIDERATION_TYPE_ENUM = %w[having noting recognizing acknowledging recalling reaffirming considering
+                                 taking-into-account pursuant-to bearing-in-mind emphasizing concerned accepts observing
+                                 referring acting empowers reaffirming].freeze
 
-  class ConsiderationTypeEnum < Shale::Type::Value
-    ALLOWED_VALUES = ['having', 'noting', 'recognizing', 'acknowledging', 'recalling', 'reaffirming', 'considering',
-    'taking-into-account', 'pursuant-to', 'bearing-in-mind', 'emphasizing', 'concerned', 'accepts', 'observing',
-    'referring', 'acting', 'empowers', 'reaffirming'].freeze
+    attribute :type, :string, values: CONSIDERATION_TYPE_ENUM
+    attribute :date, :date
+    attribute :message, :string
 
-    def self.cast(value)
-      if ALLOWED_VALUES.include?(value.to_s)
-        value.to_sym
-      else
-        raise ConsiderationTypeEnumInvalidValue, "#{value.inspect} is not a valid approval type"
-      end
+    key_value do
+      map "type", to: :type
+      map "date", to: :date
+      map "message", to: :message
     end
-
-  end
-
-  class Consideration < Shale::Mapper
-    attribute :type, ConsiderationTypeEnum
-    attribute :degree, ApprovalDegreeEnum
-    attribute :date, Shale::Type::Date
-    attribute :message, Shale::Type::String
   end
 end

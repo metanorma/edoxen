@@ -1,0 +1,286 @@
+# yaml-language-server: $schema=http://json-schema.org/draft-07/schema
+---
+$schema: "http://json-schema.org/draft-07/schema#"
+$id: "https://github.com/metanorma/edoxen/schema/edoxen.yaml"
+title: "Edoxen Resolution Collection Schema"
+description: "Schema for validating Edoxen resolution collection YAML files"
+type: object
+
+properties:
+  metadata:
+    type: object
+    description: "Metadata about the resolution collection"
+    properties:
+      title:
+        type: string
+        description: "Title of the resolution collection"
+      date:
+        type: string
+        format: date
+        description: "Date of the meeting or collection (YYYY-MM-DD)"
+      source:
+        type: string
+        description: "Source organization or secretariat"
+      venue:
+        type: string
+        description: "Meeting venue"
+      chair:
+        type: string
+        description: "Meeting chair"
+    additionalProperties: false
+
+  resolutions:
+    type: array
+    description: "Array of resolutions"
+    items:
+      $ref: "#/$defs/Resolution"
+
+required:
+  - resolutions
+
+$defs:
+  Resolution:
+    type: object
+    description: "A single resolution"
+    properties:
+      identifier:
+        oneOf:
+          - type: string
+          - type: integer
+        description: "Resolution identifier (e.g., '2019-01' or 1)"
+
+      title:
+        type: string
+        description: "Resolution title"
+
+      type:
+        type: string
+        enum:
+          - "resolution"
+          - "recommendation"
+          - "decision"
+          - "declaration"
+        description: "Type of resolution"
+
+      category:
+        type: string
+        description: "Resolution category"
+
+      subject:
+        type: string
+        description: "Subject or scope of the resolution"
+
+      dates:
+        type: array
+        items:
+          type: string
+          format: date
+        description: "Array of relevant dates"
+
+      considerations:
+        type: array
+        items:
+          $ref: "#/$defs/Consideration"
+        description: "Considerations leading to the resolution"
+
+      approvals:
+        type: array
+        items:
+          $ref: "#/$defs/Approval"
+        description: "Approval information"
+
+      actions:
+        type: array
+        items:
+          $ref: "#/$defs/Action"
+        description: "Actions taken in the resolution"
+
+      meeting:
+        $ref: "#/$defs/MeetingIdentifier"
+        description: "Meeting information"
+
+      relationships:
+        type: array
+        items:
+          $ref: "#/$defs/ResolutionRelationship"
+        description: "Relationships to other resolutions"
+
+    required:
+      - title
+    additionalProperties: false
+
+  Consideration:
+    type: object
+    description: "A consideration leading to a resolution"
+    properties:
+      type:
+        type: string
+        enum:
+          - "having"
+          - "noting"
+          - "recognizing"
+          - "acknowledging"
+          - "considering"
+          - "recalling"
+          - "welcoming"
+          - "appreciating"
+        description: "Type of consideration"
+
+      date_effective:
+        type: string
+        format: date
+        description: "Effective date of the consideration"
+
+      message:
+        type: string
+        description: "Consideration text"
+
+      subject:
+        type: string
+        description: "Subject of the consideration"
+
+    additionalProperties: false
+
+  Approval:
+    type: object
+    description: "Approval information for a resolution"
+    properties:
+      type:
+        type: string
+        enum:
+          - "affirmative"
+          - "negative"
+        description: "Type of approval"
+
+      degree:
+        type: string
+        enum:
+          - "unanimous"
+          - "majority"
+          - "minority"
+        description: "Degree of approval"
+
+      message:
+        type: string
+        description: "Approval details"
+
+    additionalProperties: false
+
+  Action:
+    type: object
+    description: "An action taken in a resolution"
+    properties:
+      type:
+        type: string
+        enum:
+          - "adopts"
+          - "thanks"
+          - "approves"
+          - "decides"
+          - "declares"
+          - "resolves"
+          - "requests"
+          - "recommends"
+          - "encourages"
+          - "welcomes"
+          - "notes"
+          - "confirms"
+          - "reaffirms"
+          - "withdraws"
+          - "abrogates"
+          - "establishes"
+          - "appoints"
+          - "nominates"
+          - "extends"
+          - "initiates"
+        description: "Type of action"
+
+      date_effective:
+        type: string
+        format: date
+        description: "Effective date of the action"
+
+      message:
+        type: string
+        description: "Action text"
+
+      subject:
+        type: string
+        description: "Subject of the action"
+
+    additionalProperties: false
+
+  MeetingIdentifier:
+    type: object
+    description: "Meeting identification information"
+    properties:
+      venue:
+        type: string
+        description: "Meeting venue"
+
+      date:
+        type: string
+        format: date
+        description: "Meeting date"
+
+      identifier:
+        type: string
+        description: "Meeting identifier"
+
+    additionalProperties: false
+
+  ResolutionRelationship:
+    type: object
+    description: "Relationship between resolutions"
+    properties:
+      type:
+        type: string
+        enum:
+          - "supersedes"
+          - "amends"
+          - "references"
+          - "replaces"
+          - "updates"
+        description: "Type of relationship"
+
+      target:
+        type: string
+        description: "Target resolution identifier"
+
+      description:
+        type: string
+        description: "Description of the relationship"
+
+    additionalProperties: false
+
+  StructuredIdentifier:
+    type: object
+    description: "Structured identifier with prefix and number"
+    properties:
+      prefix:
+        type: string
+        description: "Identifier prefix"
+
+      number:
+        oneOf:
+          - type: string
+          - type: integer
+        description: "Identifier number"
+
+    additionalProperties: false
+
+  SubjectBody:
+    type: object
+    description: "Subject body information"
+    properties:
+      name:
+        type: string
+        description: "Name of the subject body"
+
+      address:
+        type: string
+        description: "Address of the subject body"
+
+    additionalProperties: false
+
+additionalProperties: false
