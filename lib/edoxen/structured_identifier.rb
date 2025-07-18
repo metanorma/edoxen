@@ -1,14 +1,20 @@
+# frozen_string_literal: true
+
 # StructuredIdentifier {
 #   number:
 #   prefix:
 # }
 
-require "shale"
-require "shale/type/value"
+require "lutaml/model"
 
 module Edoxen
-  class StructuredIdentifier < Shale::Mapper
-    attribute :number, Shale::Type::String
-    attribute :prefix, Shale::Type::String
+  class StructuredIdentifier < Lutaml::Model::Serializable
+    attribute :number, :string
+    attribute :prefix, :string
+
+    key_value do
+      map "number", to: :number
+      map "prefix", to: :prefix
+    end
   end
 end

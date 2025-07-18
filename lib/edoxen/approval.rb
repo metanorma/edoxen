@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # Approval {
 #   type: ApprovalType
 #   degree: ApprovalDegree
@@ -15,43 +17,23 @@
 #   majority
 #   minority
 # }
-require "shale"
-require "shale/type/value"
+require "lutaml/model"
+
 module Edoxen
-  class ConsiderationTypeEnumInvalidValue < TypeError; end
+  class Approval < Lutaml::Model::Serializable
+    APPROVAL_TYPE_ENUM = %w[affirmative negative].freeze
+    APPROVAL_DEGREE_ENUM = %w[unanimous majority minority].freeze
 
-  class ApprovalDegreeEnumInvalidValue < TypeError; end
+    attribute :type, :string, values: APPROVAL_TYPE_ENUM
+    attribute :degree, :string, values: APPROVAL_DEGREE_ENUM
+    attribute :date, :date
+    attribute :message, :string
 
-  class ConsiderationTypeEnum < Shale::Type::Value
-    ALLOWED_VALUES = ['affirmative', 'negative'].freeze
-
-    def self.cast(value)
-      if ALLOWED_VALUES.include?(value.to_s)
-        value.to_sym
-      else
-        raise ConsiderationTypeEnumInvalidValue, "#{value.inspect} is not a valid approval type"
-      end
+    key_value do
+      map "type", to: :type
+      map "degree", to: :degree
+      map "date", to: :date
+      map "message", to: :message
     end
-
-  end
-
-  class ApprovalDegreeEnum < Shale::Type::Value
-    ALLOWED_VALUES = ['affirmative', 'negative'].freeze
-
-    def self.cast(value)
-      if ALLOWED_VALUES.include?(value.to_s)
-        value.to_sym
-      else
-        raise ApprovalDegreeEnumInvalidValue, "#{value.inspect} is not a valid approval degree"
-      end
-    end
-
-  end
-
-  class Approval < Shale::Mapper
-    attribute :type, ConsiderationTypeEnum
-    attribute :degree, ApprovalDegreeEnum
-    attribute :date, Shale::Type::Date
-    attribute :message, Shale::Type::String
   end
 end

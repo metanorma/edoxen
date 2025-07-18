@@ -1,14 +1,20 @@
+# frozen_string_literal: true
+
 # SubjectBody {
 #   name
 #   address
 #   etc.
 # }
-require "shale"
-require "shale/type/value"
+require "lutaml/model"
 
 module Edoxen
-  class SubjectBody < Shale::Mapper
-    attribute :name, Shale::Type::String
-    attribute :address, Shale::Type::String
+  class SubjectBody < Lutaml::Model::Serializable
+    attribute :name, :string
+    attribute :address, :string
+
+    key_value do
+      map "name", to: :name
+      map "address", to: :address
+    end
   end
 end

@@ -8,11 +8,14 @@ Gem::Specification.new do |spec|
   spec.authors = ["Ribose Inc."]
   spec.email = ["open.source@ribose.com"]
 
-  spec.summary = "Reader/writer for the Edoxen resolutions information models."
-  spec.description = "see --help"
+  spec.summary = "Edoxen is a set of information models used for representing resolution and decision information."
+  spec.description = <<~HEREDOC
+    Edoxen provides a Ruby library for working with resolution models, allowing users to create, manipulate, and serialize resolution data in a structured format. It is built on top of the lutaml-model serialization framework, which provides a flexible and extensible way to define data models and serialize them to YAML or JSON formats.
+  HEREDOC
+
   spec.homepage = "https://github.com/metanorma/edoxen"
   spec.license = "BSD-2-Clause"
-  spec.required_ruby_version = ">= 2.6.0"
+  spec.required_ruby_version = ">= 3.0.0"
 
   spec.metadata["homepage_uri"] = spec.homepage
   spec.metadata["source_code_uri"] = "https://github.com/metanorma/edoxen"
@@ -29,9 +32,5 @@ Gem::Specification.new do |spec|
   spec.executables = spec.files.grep(%r{\Aexe/}) { |f| File.basename(f) }
   spec.require_paths = ["lib"]
 
-  # Uncomment to register a new dependency of your gem
-  # spec.add_dependency "example-gem", "~> 1.0"
-
-  # For more information and examples about making a new gem, check out our
-  # guide at: https://bundler.io/guides/creating_gem.html
+  spec.add_dependency "lutaml-model", "~> 0.7"
 end

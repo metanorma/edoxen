@@ -1,77 +1,258 @@
 = Edoxen
 
+https://github.com/metanorma/edoxen[image:https://img.shields.io/github/stars/metanorma/edoxen.svg?style=social[GitHub Stars]]
+https://github.com/metanorma/edoxen[image:https://img.shields.io/github/forks/metanorma/edoxen.svg?style=social[GitHub Forks]]
+image:https://img.shields.io/github/license/metanorma/edoxen.svg[License]
+image:https://img.shields.io/github/actions/workflow/status/metanorma/edoxen/test.yml?branch=main[Build Status]
+image:https://img.shields.io/gem/v/edoxen.svg[RubyGems Version]
+
+== Purpose
+
+Edoxen is a set of information models used for representing resolution and
+decision information. They are designed to provide a structured way to model
+formal resolutions, including their metadata, actions, considerations, and
+approvals.
+
+The `edoxen` gem provides a Ruby library for working with these models,
+allowing users to create, manipulate, and serialize resolution data in a
+structured format. It is built on top of the `lutaml-model` serialization
+framework, which provides a flexible and extensible way to define data models
+and serialize them to YAML or JSON formats.
+
+This library is particularly useful for standards organizations, committees,
+and governance bodies that need to maintain structured records of their
+decision-making processes.
+
+
+== Origin
+
 "Edoxen" is how all resolutions of Ancient Athens started.
 
 ____
 "It was the opinion of... (the people and city that...)"
 ____
 
-
-== Purpose
-
-Edoxen is a set of information models used for representing resolution and
-decision information.
-
-The `edoxen` gem provides a library for accessing, writing and manipulating
-the Edoxen information models, which can be serialized into a defined YAML
-structure.
+The word "edoxen" originates from the Ancient Greek word edokeō (ἔδοξεν),
+meaning "it was the opinion of" or "it seemed good to". This term was used in
+the context of formal resolutions and decisions made by the Athenian assembly,
+reflecting the collective will and judgment of the citizens.
 
 
-== Information models
+== Features
 
-The Edoxen information models are available at:
-
-* https://github.com/metanorma/edoxen-model/
-
-
-== Sample data
-
-The following repositories contain Edoxen models in YAML:
-
-* BIPM and CIPM body resolutions: https://github.com/metanorma/bipm-data-outcomes
-* ISO/TC 154 resolutions: https://github.com/iso-tc154/resolutions-data
-
+* Classes for modeling resolutions, actions, considerations, and approvals
+* Support for resolution collections with metadata
+* YAML and JSON serialization with round-trip compatibility
+* Structured identifiers and meeting information
+* Resolution relationships and dependencies
+* Integration with the `lutaml-model` serialization framework
+* Comprehensive YAML schema for validation
+* Real-world data compatibility with ISO/TC 154 resolution formats
 
 == Installation
 
-Install the gem and add to the application's Gemfile by executing:
+Add this line to your application's Gemfile:
+
+[source,ruby]
+----
+gem 'edoxen'
+----
+
+And then execute:
 
 [source,sh]
 ----
-$ bundle add edoxen
+$ bundle install
 ----
 
-If bundler is not being used to manage dependencies, install the gem by
-executing:
+Or install it yourself as:
 
 [source,sh]
 ----
 $ gem install edoxen
 ----
 
+== Quick start
 
-== Usage
+Here's a minimal example to get you started:
 
+[source,ruby]
+----
+require 'edoxen'
 
-== Development
+# Create a simple resolution
+resolution = Edoxen::Resolution.new(
+  title: "Adoption of new standard",
+  type: "resolution",
+  category: "Technical resolutions",
+  identifier: "2024-01"
+)
 
-After checking out the repo, run `bin/setup` to install dependencies. Then, run
-`rake spec` to run the tests. You can also run `bin/console` for an interactive
-prompt that will allow you to experiment.
+# Add an action to the resolution
+action = Edoxen::Action.new(
+  type: "resolves",
+  message: "to adopt ISO 12345 as a new standard",
+  date_effective: Date.new(2024, 1, 15)
+)
+resolution.actions = [action]
 
-To install this gem onto your local machine, run `bundle exec rake install`. To
-release a new version, update the version number in `version.rb`, and then run
-`bundle exec rake release`, which will create a git tag for the version, push
-git commits and the created tag, and push the `.gem` file to
-https://rubygems.org.
+# Add a consideration
+consideration = Edoxen::Consideration.new(
+  type: "having",
+  message: "reviewed the technical specifications"
+)
+resolution.considerations = [consideration]
+
+# Serialize to YAML
+puts resolution.to_yaml
+
+# Create a resolution collection
+collection = Edoxen::ResolutionCollection.new(
+  metadata: {
+    title: "Resolutions of the 42nd plenary meeting",
+    date: "2024-01-15",
+    source: "ISO/TC 154 Secretariat"
+  },
+  resolutions: [resolution]
+)
+
+# Serialize collection to YAML
+puts collection.to_yaml
+----
+
+== Documentation
+
+=== Data models
+
+The library provides these main model classes:
+
+`Edoxen::Resolution`::
+Core model representing a formal resolution with title, type, category, and
+associated elements.
+
+`Edoxen::ResolutionCollection`::
+Container for multiple resolutions with metadata about the meeting or
+collection context.
+
+`Edoxen::Action`::
+Represents actions taken within a resolution (e.g., "resolves", "requests",
+"thanks").
+
+`Edoxen::Consideration`::
+Models considerations that lead to a resolution (e.g., "having", "noting",
+"recognizing").
+
+`Edoxen::Approval`::
+Captures approval information including type and degree of consensus.
+
+`Edoxen::MeetingIdentifier`::
+Contains meeting identification information such as venue, date, and identifier.
+
+`Edoxen::ResolutionRelationship`::
+Defines relationships between resolutions (e.g., "supersedes", "amends").
+
+=== Architecture overview
+
+The library is built on `lutaml-model` and follows these design principles:
+
+**Model-based approach**::
+Each entity is represented as a Ruby class with defined attributes and
+serialization mappings.
+
+**Flexible serialization**::
+Support for both YAML and JSON formats with automatic type conversion and
+round-trip compatibility.
+
+**Extensible structure**::
+Models allow additional properties beyond the core schema, enabling
+customization for specific organizational needs.
+
+**Real-world compatibility**::
+Designed to work with existing resolution data formats used by standards
+organizations.
+
+== Usage workflow
+
+The `edoxen` workflow follows a straightforward approach:
+
+=== 1. Data modeling
+
+. **Create resolutions**: Instantiate `Resolution` objects with required
+  attributes
+. **Add components**: Attach actions, considerations, approvals as needed
+. **Build collections**: Group resolutions into collections with metadata
+
+=== 2. Serialization and persistence
+
+. **Export to YAML/JSON**: Use built-in serialization methods
+. **Validate structure**: Leverage the provided YAML schema for validation
+. **Round-trip processing**: Load and save data while preserving structure
+
+== YAML format specification
+
+Edoxen uses a structured YAML format for resolution data. Here's an example:
+
+[source,yaml]
+----
+metadata:
+  title: "Resolutions of the 42nd plenary meeting of ISO/TC 154"
+  date: "2024-01-15"
+  source: "ISO/TC 154 Secretariat"
+  venue: "Virtual meeting"
+
+resolutions:
+  - identifier: "2024-01"
+    title: "Adoption of new standard"
+    type: "resolution"
+    category: "Technical resolutions"
+
+    considerations:
+      - type: "having"
+        message: "reviewed the technical specifications"
+
+    actions:
+      - type: "resolves"
+        message: "to adopt ISO 12345 as a new standard"
+        date_effective: "2024-01-15"
+
+    approvals:
+      - type: "affirmative"
+        degree: "unanimous"
+----
+
+=== Schema validation
+
+A comprehensive YAML schema is provided at `schema/edoxen.yaml` for validating
+resolution data files. The schema follows JSON Schema Draft 7 conventions and
+includes:
+
+* Complete structure definitions for all model types
+* Enumerated values for type validation
+* Date format validation
+* Flexible extensibility with `additionalProperties`
+
+The schema can be used with standard JSON Schema validators to ensure data
+integrity and compliance.
+
+== Real-world examples
+
+The library has been tested with real resolution data from ISO/TC 154 and
+other standards organizations. It successfully handles:
+
+* Complex resolution structures with multiple actions and considerations
+* Various resolution types (resolutions, recommendations, decisions)
+* Meeting metadata and organizational information
+* Cross-references and relationships between resolutions
+* Historical data migration and format conversion
 
 == Contributing
 
 Bug reports and pull requests are welcome on GitHub at
-https://github.com/[USERNAME]/edoxen. This project is intended to be a safe, welcoming space for collaboration, and contributors are expected to adhere to the https://github.com/[USERNAME]/edoxen/blob/main/CODE_OF_CONDUCT.md[code of conduct].
+https://github.com/metanorma/edoxen.
 
-== Code of Conduct
+== License and Copyright
 
-Everyone interacting in the Edoxen project's codebases, issue trackers, chat
-rooms and mailing lists is expected to follow the
-https://github.com/[USERNAME]/edoxen/blob/main/CODE_OF_CONDUCT.md[code of conduct].
+This project is licensed under the BSD 2-clause License.
+See the link:LICENSE[] file for details.
+
+Copyright Ribose.

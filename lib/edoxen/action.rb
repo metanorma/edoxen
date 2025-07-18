@@ -1,33 +1,28 @@
-require "shale"
-require "shale/type/value"
+# frozen_string_literal: true
+
+require "lutaml/model"
 
 module Edoxen
+  class Action < Lutaml::Model::Serializable
+    ACTION_TYPE_ENUM = %w[
+      adopts thanks approves decides declares asks invites resolves confirms
+      welcomes recommends requests congratulates instructs urges appoints
+      resolves further instructs calls-upon encourages affirms elects
+      authorizes charges states remarks judges sanctions abrogates empowers
+    ].freeze
 
-  class ConsiderationTypeEnumInvalidValue < TypeError; end
+    attribute :type, :string, values: ACTION_TYPE_ENUM
+    attribute :date_effective, :date
+    attribute :message, :string
+    attribute :subject, :string
 
-  class ActionTypeEnum < Shale::Type::Value
-    ALLOWED_VALUES = ['adopts', 'thanks', 'approves', 'decides', 'declares', 'asks', 'invites', 'resolves', 'confirms',
-    'welcomes', 'recommends', 'requests', 'congratulates', 'instructs', 'urges', 'appoints', 'resolves further',
-    'instructs', 'calls-upon', 'encourages', 'affirms', 'elects', 'authorizes', 'charges', 'states', 'remarks', 'judges',
-    'sanctions', 'abrogates', 'empowers'].freeze
-
-    def self.cast(value)
-      if ALLOWED_VALUES.include?(value.to_s)
-        value.to_sym
-      else
-        raise ConsiderationTypeEnumInvalidValue, "#{value.inspect} is not a valid action type"
-      end
+    key_value do
+      map "type", to: :type
+      map "date_effective", to: :date_effective
+      map "message", to: :message
+      map "subject", to: :subject
     end
-
   end
-
-  class Action < Shale::Mapper
-    attribute :type, ActionTypeEnum
-    attribute :dateEffective, Shale::Type::Date
-    attribute :message, Shale::Type::String
-    attribute :subject, Shale::Type::String
-  end
-
 end
 
 # Action {

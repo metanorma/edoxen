@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # class ResolutionRelation {
 #   source: StructuredIdentifier (Resolution)
 #   destination: StructuredIdentifier (Resolution)
