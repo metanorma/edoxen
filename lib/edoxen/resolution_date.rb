@@ -13,6 +13,5 @@ module Edoxen
       map "end", to: :end
       map "kind", to: :kind
     end
-
   end
 end
