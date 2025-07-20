@@ -32,7 +32,7 @@ module Edoxen
         begin
           content = File.read(file)
           Edoxen::ResolutionSet.from_yaml(content)
-        rescue => e
+        rescue StandardError => e
           model_errors << "Model parsing failed: #{e.message}"
         end
 
@@ -63,10 +63,10 @@ module Edoxen
 
       say "\n📊 Validation Summary:", :blue
       say "  Valid files: #{valid_count}", :green
-      say "  Invalid files: #{invalid_count}", invalid_count > 0 ? :red : :green
+      say "  Invalid files: #{invalid_count}", invalid_count.positive? ? :red : :green
       say "  Success rate: #{((valid_count.to_f / files.size) * 100).round(1)}%", :blue
 
-      exit(invalid_count > 0 ? 1 : 0)
+      exit(invalid_count.positive? ? 1 : 0)
     end
 
     desc "normalize YAML_FILE_PATTERN", "Normalize YAML files using Edoxen schema"
@@ -111,9 +111,7 @@ module Edoxen
           normalized_yaml = resolution_set.to_yaml
 
           # Prepend the yaml-language-server comment if it was present
-          if yaml_language_server_comment
-            normalized_yaml = "#{yaml_language_server_comment}\n#{normalized_yaml}"
-          end
+          normalized_yaml = "#{yaml_language_server_comment}\n#{normalized_yaml}" if yaml_language_server_comment
 
           if options[:inplace]
             # Write directly to the original file
@@ -128,7 +126,7 @@ module Edoxen
           end
 
           success_count += 1
-        rescue => e
+        rescue StandardError => e
           say "❌ FAILED", :red
           say "    Error: #{e.message}", :red
           error_count += 1
@@ -137,7 +135,7 @@ module Edoxen
 
       say "\n📊 Normalization Summary:", :blue
       say "  Successful: #{success_count}", :green
-      say "  Failed: #{error_count}", error_count > 0 ? :red : :green
+      say "  Failed: #{error_count}", error_count.positive? ? :red : :green
       say "  Success rate: #{((success_count.to_f / files.size) * 100).round(1)}%", :blue
 
       if options[:output]
@@ -146,7 +144,7 @@ module Edoxen
         say "  Files modified in place", :yellow
       end
 
-      exit(error_count > 0 ? 1 : 0)
+      exit(error_count.positive? ? 1 : 0)
     end
 
     private
@@ -165,7 +163,7 @@ module Edoxen
       # Look for yaml-language-server comment in the first few lines
       lines.first(5).each do |line|
         if line.strip.match?(/^#\s*yaml-language-server:\s*\$schema=/)
-          return line.rstrip  # Only strip trailing whitespace, keep the #
+          return line.rstrip # Only strip trailing whitespace, keep the #
         end
       end
 

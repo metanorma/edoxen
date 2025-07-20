@@ -13,6 +13,5 @@ module Edoxen
       map "metadata", to: :metadata
       map "resolutions", to: :resolutions
     end
-
   end
 end

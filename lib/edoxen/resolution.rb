@@ -43,6 +43,5 @@ module Edoxen
       map "categories", to: :categories
       map "urls", to: :urls
     end
-
   end
 end
