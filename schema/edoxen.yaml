@@ -2,22 +2,26 @@
 ---
 $schema: "http://json-schema.org/draft-07/schema#"
 $id: "https://github.com/metanorma/edoxen/schema/edoxen.yaml"
-title: "Edoxen Resolution Collection Schema"
-description: "Schema for validating Edoxen resolution collection YAML files"
+title: "Edoxen Resolution Set Schema"
+description: "Schema for validating Edoxen resolution set YAML files"
 type: object
 
 properties:
   metadata:
     type: object
-    description: "Metadata about the resolution collection"
+    description: "Metadata about the resolution set"
     properties:
       title:
         type: string
-        description: "Title of the resolution collection"
-      date:
+        description: "Title of the resolution set"
+      identifier:
         type: string
-        format: date
-        description: "Date of the meeting or collection (YYYY-MM-DD)"
+        description: "Identifier for the resolution set (e.g., '2019-01')"
+      dates:
+        type: array
+        description: "Array of dates related to the set"
+        items:
+          $ref: "#/$defs/ComplexDate"
       source:
         type: string
         description: "Source organization or secretariat"
@@ -27,6 +31,22 @@ properties:
       chair:
         type: string
         description: "Meeting chair"
+      attendees:
+        type: array
+        items:
+          type: string
+        description: "List of attendees"
+      apologies:
+        type: array
+        items:
+          type: string
+        description: "List of apologies"
+      urls:
+        type: array
+        items:
+          $ref: "#/$defs/Url"
+        description: "Array of URLs related to the resolution set"
+
     additionalProperties: false
 
   resolutions:
@@ -62,9 +82,11 @@ $defs:
           - "declaration"
         description: "Type of resolution"
 
-      category:
-        type: string
-        description: "Resolution category"
+      categories:
+        type: array
+        items:
+          type: string
+        description: "Resolution categories"
 
       subject:
         type: string
@@ -73,15 +95,22 @@ $defs:
       dates:
         type: array
         items:
-          type: string
-          format: date
-        description: "Array of relevant dates"
+          $ref: "#/$defs/ComplexDate"
+        description: "Array of relevant dates with start/end structure"
+
+      message:
+        type: string
+        description: "Resolution message"
+
+      considering:
+        type: string
+        description: "Considering clause"
 
       considerations:
         type: array
         items:
           $ref: "#/$defs/Consideration"
-        description: "Considerations leading to the resolution"
+        description: "Array of considerations leading to the resolution"
 
       approvals:
         type: array
@@ -95,18 +124,69 @@ $defs:
           $ref: "#/$defs/Action"
         description: "Actions taken in the resolution"
 
+      urls:
+        type: array
+        items:
+          $ref: "#/$defs/Url"
+        description: "Array of URLs related to the resolution"
+
       meeting:
         $ref: "#/$defs/MeetingIdentifier"
         description: "Meeting information"
 
-      relationships:
+      relations:
         type: array
         items:
-          $ref: "#/$defs/ResolutionRelationship"
-        description: "Relationships to other resolutions"
+          $ref: "#/$defs/ResolutionRelations"
+        description: "Relations to other resolutions"
 
+    additionalProperties: false
     required:
-      - title
+      - subject
+      - identifier
+      - actions
+
+  ComplexDate:
+    type: object
+    description: "Date with start and end"
+    properties:
+      start:
+        type: string
+        format: date
+        description: "Start date or single date if no end date"
+      end:
+        type: string
+        format: date
+        description: "End date (optional)"
+      kind:
+        type: string
+        enum:
+          - "enactment"
+          - "ballot"
+          - "effective"
+          - "decision"
+          - "meeting"
+        description: "Kind of date (e.g., enactment, ballot, effective)"
+    required:
+    - kind
+    additionalProperties: false
+
+  Url:
+    type: object
+    description: "URL with kind and reference"
+    properties:
+      kind:
+        type: string
+        enum:
+          - "access"
+          - "report"
+        description: "Kind of URL (e.g., access, report)"
+      ref:
+        type: string
+        description: "Reference URL"
+      format:
+        type: string
+        description: "Format of the URL (e.g., 'html', 'pdf')"
     additionalProperties: false
 
   Consideration:
@@ -116,20 +196,23 @@ $defs:
       type:
         type: string
         enum:
-          - "having"
-          - "noting"
-          - "recognizing"
           - "acknowledging"
+          - "following"
+          - "basing"
           - "considering"
+          - "identifying"
+          - "according"
+          - "noting"
           - "recalling"
-          - "welcoming"
-          - "appreciating"
+          - "recognises"
+          - "recognising"
+          - "recognizing"
         description: "Type of consideration"
 
-      date_effective:
-        type: string
-        format: date
-        description: "Effective date of the consideration"
+      dates:
+        type: array
+        items:
+          $ref: "#/$defs/ComplexDate"
 
       message:
         type: string
@@ -139,6 +222,9 @@ $defs:
         type: string
         description: "Subject of the consideration"
 
+    required:
+    - type
+    - message
     additionalProperties: false
 
   Approval:
@@ -169,36 +255,76 @@ $defs:
   Action:
     type: object
     description: "An action taken in a resolution"
+    required:
+      - type
+      - message
     properties:
       type:
         type: string
         enum:
+          - "accepts"
+          - "acknowledges"
+          - "adoption"
           - "adopts"
-          - "thanks"
-          - "approves"
-          - "decides"
-          - "declares"
-          - "resolves"
-          - "requests"
-          - "recommends"
-          - "encourages"
-          - "welcomes"
-          - "notes"
-          - "confirms"
-          - "reaffirms"
-          - "withdraws"
-          - "abrogates"
-          - "establishes"
+          - "agrees"
+          - "allocates"
           - "appoints"
+          - "appreciates"
+          - "appreciation"
+          - "approves"
+          - "asks"
+          - "assigns"
+          - "chairs"
+          - "communicating"
+          - "confirms"
+          - "considers"
+          - "consults"
+          - "creates"
+          - "decides"
+          - "defines"
+          - "delegates"
+          - "delivering"
+          - "directs"
+          - "disbands"
+          - "drafting"
+          - "elects"
+          - "empowers"
+          - "encourages"
+          - "endorses"
+          - "estabilishes"
+          - "establishes"
+          - "gathering"
+          - "identifies"
+          - "instructs"
+          - "investigates"
           - "nominates"
-          - "extends"
-          - "initiates"
+          - "notes"
+          - "notifies"
+          - "recognises"
+          - "recognizes"
+          - "reminds"
+          - "recommends"
+          - "registers"
+          - "regrets"
+          - "request"
+          - "replaces"
+          - "requests"
+          - "resolves"
+          - "restates"
+          - "scopes"
+          - "secures"
+          - "sends"
+          - "supports"
+          - "thanks"
+          - "welcomes"
+          - "withdraws"
         description: "Type of action"
 
-      date_effective:
-        type: string
-        format: date
-        description: "Effective date of the action"
+      dates:
+        type: array
+        items:
+          $ref: "#/$defs/ComplexDate"
+        description: "Dates of the action"
 
       message:
         type: string
@@ -207,6 +333,14 @@ $defs:
       subject:
         type: string
         description: "Subject of the action"
+
+      degree:
+        type: string
+        description: "Degree of the action"
+        enum:
+          - "unanimous"
+          - "majority"
+          - "minority"
 
     additionalProperties: false
 
@@ -218,10 +352,11 @@ $defs:
         type: string
         description: "Meeting venue"
 
-      date:
-        type: string
-        format: date
-        description: "Meeting date"
+      dates:
+        type: array
+        description: "Meeting dates"
+        items:
+          $ref: "#/$defs/ComplexDate"
 
       identifier:
         type: string
@@ -229,9 +364,9 @@ $defs:
 
     additionalProperties: false
 
-  ResolutionRelationship:
+  ResolutionRelations:
     type: object
-    description: "Relationship between resolutions"
+    description: "Relation between resolutions"
     properties:
       type:
         type: string
@@ -241,7 +376,7 @@ $defs:
           - "references"
           - "replaces"
           - "updates"
-        description: "Type of relationship"
+        description: "Type of relation"
 
       target:
         type: string
@@ -249,7 +384,7 @@ $defs:
 
       description:
         type: string
-        description: "Description of the relationship"
+        description: "Description of the relation"
 
     additionalProperties: false
 

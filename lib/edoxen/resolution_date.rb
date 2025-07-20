@@ -1,33 +1,18 @@
 # frozen_string_literal: true
 
-# class ResolutionRelation {
-#   source: StructuredIdentifier (Resolution)
-#   destination: StructuredIdentifier (Resolution)
-#   type: ResolutionRelationType
-# }
+require "lutaml/model"
 
-# enum ResolutionRelationType {
-#   annexOf {
-#     This resolution is an annex to the target resolution.
-#   }
+module Edoxen
+  class ResolutionDate < Lutaml::Model::Serializable
+    attribute :start, :date
+    attribute :end, :date
+    attribute :kind, :string, values: %w[ballot enactment effective decision meeting]
 
-#   hasAnnex {
-#     The target resolution is an annex of the source resolution.
-#   }
+    key_value do
+      map "start", to: :start
+      map "end", to: :end
+      map "kind", to: :kind
+    end
 
-#   updates {
-#     This resolution updates the target resolution.
-#   }
-
-#   refines {
-#     This resolution refines the target resolution.
-#   }
-
-#   replaces/obsoletes {
-#     This resolution replaces/obsoletes the target resolution.
-#   }
-
-#   considers {
-#     This resolution is made in consideration of the target resolution.
-#   }
-# }
+  end
+end

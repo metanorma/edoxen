@@ -35,7 +35,7 @@
 require "lutaml/model"
 
 module Edoxen
-  class ResolutionRelationship < Lutaml::Model::Serializable
+  class ResolutionRelation < Lutaml::Model::Serializable
     RESOLUTION_RELATIONSHIP_ENUM = %w[annexOf hasAnnex updates refines replaces obsoletes considers].freeze
 
     attribute :source, :string
