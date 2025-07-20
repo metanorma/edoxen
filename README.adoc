@@ -23,7 +23,6 @@ This library is particularly useful for standards organizations, committees,
 and governance bodies that need to maintain structured records of their
 decision-making processes.
 
-
 == Origin
 
 "Edoxen" is how all resolutions of Ancient Athens started.
@@ -37,17 +36,18 @@ meaning "it was the opinion of" or "it seemed good to". This term was used in
 the context of formal resolutions and decisions made by the Athenian assembly,
 reflecting the collective will and judgment of the citizens.
 
-
 == Features
 
 * Classes for modeling resolutions, actions, considerations, and approvals
-* Support for resolution collections with metadata
+* Support for resolution collections with rich metadata
+* Structured date handling with semantic meaning (meeting, decision, effective dates)
 * YAML and JSON serialization with round-trip compatibility
 * Structured identifiers and meeting information
 * Resolution relationships and dependencies
 * Integration with the `lutaml-model` serialization framework
 * Comprehensive YAML schema for validation
-* Real-world data compatibility with ISO/TC 154 resolution formats
+* Command-line interface for validation and processing
+* Real-world compatibility with real-world resolutions (e.g., ISO/TCs, CIPM)
 
 == Installation
 
@@ -72,139 +72,181 @@ Or install it yourself as:
 $ gem install edoxen
 ----
 
-== Quick start
+== Command Line Interface
 
-Here's a minimal example to get you started:
+The `edoxen` command provides utilities for working with resolution data files.
 
-[source,ruby]
+=== Available Commands
+
+Get help on available commands:
+
+[source,sh]
 ----
-require 'edoxen'
-
-# Create a simple resolution
-resolution = Edoxen::Resolution.new(
-  title: "Adoption of new standard",
-  type: "resolution",
-  category: "Technical resolutions",
-  identifier: "2024-01"
-)
-
-# Add an action to the resolution
-action = Edoxen::Action.new(
-  type: "resolves",
-  message: "to adopt ISO 12345 as a new standard",
-  date_effective: Date.new(2024, 1, 15)
-)
-resolution.actions = [action]
-
-# Add a consideration
-consideration = Edoxen::Consideration.new(
-  type: "having",
-  message: "reviewed the technical specifications"
-)
-resolution.considerations = [consideration]
-
-# Serialize to YAML
-puts resolution.to_yaml
-
-# Create a resolution collection
-collection = Edoxen::ResolutionCollection.new(
-  metadata: {
-    title: "Resolutions of the 42nd plenary meeting",
-    date: "2024-01-15",
-    source: "ISO/TC 154 Secretariat"
-  },
-  resolutions: [resolution]
-)
-
-# Serialize collection to YAML
-puts collection.to_yaml
+$ edoxen help
+Commands:
+  edoxen help [COMMAND]               # Describe available commands or one specific command
+  edoxen normalize YAML_FILE_PATTERN  # Normalize YAML files using Edoxen schema
+  edoxen validate YAML_FILE_PATTERN   # Validate YAML files against Edoxen schema
 ----
 
-== Documentation
+=== Validation
 
-=== Data models
+Validate resolution data files against the Edoxen schema:
 
-The library provides these main model classes:
+[source,sh]
+----
+# Validate a single file
+$ edoxen validate resolutions.yaml
 
-`Edoxen::Resolution`::
-Core model representing a formal resolution with title, type, category, and
-associated elements.
+# Validate multiple files
+$ edoxen validate file1.yaml file2.yaml file3.yaml
 
-`Edoxen::ResolutionCollection`::
-Container for multiple resolutions with metadata about the meeting or
-collection context.
+# Validate files using patterns
+$ edoxen validate "*.yaml"
+$ edoxen validate "resolutions/*.yml"
 
-`Edoxen::Action`::
-Represents actions taken within a resolution (e.g., "resolves", "requests",
-"thanks").
+# Example output
+🔍 Validating 3 file(s)...
+  resolutions.yaml... ✅ VALID
+  file1.yaml... ✅ VALID
+  file2.yaml... ❌ INVALID
+    - Line 15: Invalid action type 'invalid_type'
 
-`Edoxen::Consideration`::
-Models considerations that lead to a resolution (e.g., "having", "noting",
-"recognizing").
+📊 Validation Summary:
+  Valid files: 2
+  Invalid files: 1
+  Success rate: 66.7%
+----
 
-`Edoxen::Approval`::
-Captures approval information including type and degree of consensus.
+Get detailed help for the validate command:
 
-`Edoxen::MeetingIdentifier`::
-Contains meeting identification information such as venue, date, and identifier.
+[source,sh]
+----
+$ edoxen help validate
+Usage:
+  edoxen validate YAML_FILE_PATTERN
 
-`Edoxen::ResolutionRelationship`::
-Defines relationships between resolutions (e.g., "supersedes", "amends").
+Description:
+  Validate YAML files against the Edoxen schema. Supports file patterns and multiple files.
 
-=== Architecture overview
+Examples:
+  edoxen validate resolutions.yaml
+  edoxen validate *.yaml
+  edoxen validate "data/*.yml"
+----
 
-The library is built on `lutaml-model` and follows these design principles:
+=== Normalization
 
-**Model-based approach**::
-Each entity is represented as a Ruby class with defined attributes and
-serialization mappings.
+Normalize YAML files to ensure they conform to the Edoxen schema format.
 
-**Flexible serialization**::
-Support for both YAML and JSON formats with automatic type conversion and
-round-trip compatibility.
+This command loads the YAML files, parses them through the Edoxen models, and
+outputs clean, properly formatted YAML.
 
-**Extensible structure**::
-Models allow additional properties beyond the core schema, enabling
-customization for specific organizational needs.
+[source,sh]
+----
+# Normalize files to a specific output directory
+$ edoxen normalize resolutions.yaml --output /path/to/output
 
-**Real-world compatibility**::
-Designed to work with existing resolution data formats used by standards
-organizations.
+# Normalize multiple files
+$ edoxen normalize "*.yaml" --output normalized/
 
-== Usage workflow
+# Normalize files in place (overwrites original files)
+$ edoxen normalize resolutions.yaml --inplace
 
-The `edoxen` workflow follows a straightforward approach:
+# Example output
+🔄 Normalizing 2 file(s)...
+  resolutions.yaml... ✅ NORMALIZED → /path/to/output/resolutions.yaml
+  meeting-notes.yaml... ✅ NORMALIZED → /path/to/output/meeting-notes.yaml
 
-=== 1. Data modeling
+📊 Normalization Summary:
+  Successful: 2
+  Failed: 0
+  Success rate: 100.0%
+  Output directory: /path/to/output
+----
 
-. **Create resolutions**: Instantiate `Resolution` objects with required
-  attributes
-. **Add components**: Attach actions, considerations, approvals as needed
-. **Build collections**: Group resolutions into collections with metadata
+Get detailed help for the normalize command:
 
-=== 2. Serialization and persistence
+[source,sh]
+----
+$ edoxen help normalize
+Usage:
+  edoxen normalize YAML_FILE_PATTERN
 
-. **Export to YAML/JSON**: Use built-in serialization methods
-. **Validate structure**: Leverage the provided YAML schema for validation
-. **Round-trip processing**: Load and save data while preserving structure
+Options:
+  [--output=OUTPUT]                              # Output directory for normalized files
+  [--inplace], [--no-inplace], [--skip-inplace]  # Modify files in place (no backup)
 
-== YAML format specification
+Description:
+  Normalize YAML files using Edoxen schema. This ensures consistent formatting
+  and structure according to the Edoxen data models.
 
-Edoxen uses a structured YAML format for resolution data. Here's an example:
+Examples:
+  edoxen normalize resolutions.yaml --output clean/
+  edoxen normalize "*.yaml" --inplace
+  edoxen normalize "data/*.yml" --output normalized/
+----
+
+=== Common use cases
+
+==== Validating resolution collections
+
+[source,sh]
+----
+# Validate all YAML files in a directory
+$ edoxen validate "resolutions/*.yaml"
+
+# Validate specific meeting files
+$ edoxen validate "plenary-*.yaml" "ballots-*.yaml"
+----
+
+==== Cleaning up legacy data
+
+[source,sh]
+----
+# Normalize legacy files to new schema format
+$ edoxen normalize "legacy/*.yaml" --output clean/
+
+# Update files in place after backup
+$ cp -r data/ data-backup/
+$ edoxen normalize "data/*.yaml" --inplace
+----
+
+==== Batch processing
+
+[source,sh]
+----
+# Validate and normalize in sequence
+$ edoxen validate "input/*.yaml" && edoxen normalize "input/*.yaml" --output output/
+----
+
+== Usage
+
+=== Parsing resolution data
+
+==== From YAML
 
 [source,yaml]
 ----
 metadata:
   title: "Resolutions of the 42nd plenary meeting of ISO/TC 154"
-  date: "2024-01-15"
+  dates:
+    - kind: meeting
+      start: 2024-01-15
+      end: 2024-01-17
   source: "ISO/TC 154 Secretariat"
-  venue: "Virtual meeting"
+  urls:
+    - href: "https://example.com/meeting"
+      title: "Meeting Information"
 
 resolutions:
   - identifier: "2024-01"
     title: "Adoption of new standard"
-    type: "resolution"
     category: "Technical resolutions"
+    dates:
+      - kind: decision
+        start: 2024-01-16
+    subject: "ISO/TC 154"
 
     considerations:
       - type: "having"
@@ -212,47 +254,294 @@ resolutions:
 
     actions:
       - type: "resolves"
+        dates:
+          - kind: effective
+            start: 2024-01-16
         message: "to adopt ISO 12345 as a new standard"
-        date_effective: "2024-01-15"
 
     approvals:
       - type: "affirmative"
         degree: "unanimous"
+        message: "UNANIMOUS"
 ----
 
-=== Schema validation
+[source,ruby]
+----
+require 'edoxen'
 
-A comprehensive YAML schema is provided at `schema/edoxen.yaml` for validating
-resolution data files. The schema follows JSON Schema Draft 7 conventions and
-includes:
+# Parse from YAML string
+yaml_content = File.read('resolutions.yaml')
+resolution_set = Edoxen::ResolutionSet.from_yaml(yaml_content)
 
-* Complete structure definitions for all model types
-* Enumerated values for type validation
-* Date format validation
-* Flexible extensibility with `additionalProperties`
+# Access metadata
+puts "Title: #{resolution_set.metadata.title}"
+puts "Meeting dates: #{resolution_set.metadata.dates.first.start} to #{resolution_set.metadata.dates.first.end}"
+puts "Source: #{resolution_set.metadata.source}"
 
-The schema can be used with standard JSON Schema validators to ensure data
-integrity and compliance.
+# Access resolutions
+resolution_set.resolutions.each do |resolution|
+  puts "Resolution: #{resolution.identifier} - #{resolution.title}"
+  puts "Category: #{resolution.category}"
+  puts "Subject: #{resolution.subject}"
 
-== Real-world examples
+  # Access structured dates
+  resolution.dates.each do |date|
+    puts "  #{date.kind.capitalize} date: #{date.start}"
+  end
 
-The library has been tested with real resolution data from ISO/TC 154 and
-other standards organizations. It successfully handles:
+  # Access considerations
+  resolution.considerations.each do |consideration|
+    puts "  Consideration (#{consideration.type}): #{consideration.message}"
+  end
 
-* Complex resolution structures with multiple actions and considerations
-* Various resolution types (resolutions, recommendations, decisions)
-* Meeting metadata and organizational information
-* Cross-references and relationships between resolutions
-* Historical data migration and format conversion
+  # Access actions
+  resolution.actions.each do |action|
+    puts "  Action (#{action.type}): #{action.message}"
+    action.dates.each do |date|
+      puts "    #{date.kind.capitalize} date: #{date.start}"
+    end
+  end
 
-== Contributing
+  # Access approvals
+  resolution.approvals.each do |approval|
+    puts "  Approval: #{approval.type} (#{approval.degree})"
+  end
+end
+----
 
-Bug reports and pull requests are welcome on GitHub at
-https://github.com/metanorma/edoxen.
+==== From JSON
 
-== License and Copyright
+[source,ruby]
+----
+require 'edoxen'
 
-This project is licensed under the BSD 2-clause License.
-See the link:LICENSE[] file for details.
+# Parse from JSON string
+json_content = File.read('resolutions.json')
+resolution_set = Edoxen::ResolutionSet.from_json(json_content)
 
-Copyright Ribose.
+# Access data (same as with YAML)
+----
+
+=== Creating resolution data
+
+==== Basic resolution
+
+[source,ruby]
+----
+require 'edoxen'
+
+# Create structured dates
+meeting_date = Edoxen::ResolutionDate.new(
+  kind: "meeting",
+  start: Date.new(2024, 1, 15),
+  end: Date.new(2024, 1, 17)
+)
+
+decision_date = Edoxen::ResolutionDate.new(
+  kind: "decision",
+  start: Date.new(2024, 1, 16)
+)
+
+effective_date = Edoxen::ResolutionDate.new(
+  kind: "effective",
+  start: Date.new(2024, 1, 16)
+)
+
+# Create metadata
+metadata = Edoxen::Metadata.new(
+  title: "Resolutions of the 42nd plenary meeting of ISO/TC 154",
+  dates: [meeting_date],
+  source: "ISO/TC 154 Secretariat",
+  urls: [
+    Edoxen::Url.new(
+      href: "https://example.com/meeting",
+      title: "Meeting Information"
+    )
+  ]
+)
+
+# Create a resolution
+resolution = Edoxen::Resolution.new(
+  identifier: "2024-01",
+  title: "Adoption of new standard",
+  category: "Technical resolutions",
+  subject: "ISO/TC 154",
+  dates: [decision_date]
+)
+
+# Add considerations
+consideration = Edoxen::Consideration.new(
+  type: "having",
+  message: "reviewed the technical specifications"
+)
+resolution.considerations = [consideration]
+
+# Add actions
+action = Edoxen::Action.new(
+  type: "resolves",
+  dates: [effective_date],
+  message: "to adopt ISO 12345 as a new standard"
+)
+resolution.actions = [action]
+
+# Add approvals
+approval = Edoxen::Approval.new(
+  type: "affirmative",
+  degree: "unanimous",
+  message: "UNANIMOUS"
+)
+resolution.approvals = [approval]
+
+# Create resolution set
+resolution_set = Edoxen::ResolutionSet.new(
+  metadata: metadata,
+  resolutions: [resolution]
+)
+----
+
+==== Multiple action types
+
+[source,ruby]
+----
+# Actions can have multiple types
+action = Edoxen::Action.new(
+  type: ["resolves", "requests"],
+  dates: [effective_date],
+  message: "to adopt the standard and request implementation guidance"
+)
+----
+
+=== Serializing resolution data
+
+==== To YAML
+
+[source,ruby]
+----
+# Serialize to YAML
+yaml_content = resolution_set.to_yaml
+File.write('resolutions.yaml', yaml_content)
+----
+
+==== To JSON
+
+[source,ruby]
+----
+# Serialize to JSON
+json_content = resolution_set.to_json
+File.write('resolutions.json', json_content)
+----
+
+== Data model
+
+The Edoxen gem provides the following models:
+
+[source]
+----
+                ┌─────────────────────────┐
+                │     ResolutionSet       │
+                │                         │
+                │ ◊metadata               │
+                │ ◊resolutions            │
+                └───────────┬─────────────┘
+                            │ 1..*
+            ┌───────────────┴────────────────┐
+┌───────────▼─────────────┐     ┌────────────▼───────────┐
+│       Resolution        │     │       Metadata         │
+│                         │     │                        │
+│ •identifier             │     │ •title                 │
+│ •title                  │     │ ◊dates                 │
+│ •category               │     │ •source                │
+│ •subject                │     │ ◊urls                  │
+│ ◊dates                  │     └────────────────────────┘
+│ ◊considerations         │
+│ ◊actions                │
+│ ◊approvals              │
+└────────────┬────────────┘
+             ├────────────────────┬────────────────────┐
+             │ 1..*               │ 1..*               │ 1..*
+    ┌────────▼────────┐  ┌────────▼────────┐  ┌────────▼────────┐
+    │  Consideration  │  │     Action      │  │    Approval     │
+    │                 │  │                 │  │                 │
+    │ •type           │  │ •type           │  │ •type           │
+    │ •message        │  │ •message        │  │ •degree         │
+    │ •date_effective │  │ •subject        │  │ •message        │
+    └─────────────────┘  └─────────────────┘  └─────────────────┘
+----
+
+=== ResolutionSet
+
+The main container for resolution collections with metadata.
+
+`metadata`:: A `Metadata` object containing collection information
+`resolutions`:: A collection of `Resolution` objects
+
+=== Metadata
+
+Contains metadata about the resolution collection.
+
+`title`:: The collection title as a string
+`dates`:: A collection of `ResolutionDate` objects for meeting dates
+`source`:: The source organization as a string
+`urls`:: A collection of `Url` objects for reference links
+
+=== ResolutionDate
+
+Represents structured date information with semantic meaning.
+
+`kind`:: The type of date as a string
+`start`:: The start date as a Date object
+`end`:: The end date as a Date object (optional, for date ranges)
+
+=== Url
+
+Represents a URL reference with optional title.
+
+`href`:: The URL as a string
+`title`:: The link title as a string (optional)
+
+=== Resolution
+
+Represents a single formal resolution.
+
+`identifier`:: The resolution identifier as a string
+`title`:: The resolution title as a string
+`category`:: The resolution category as a string (optional)
+`subject`:: The subject body as a string (optional)
+`dates`:: A collection of `ResolutionDate` objects
+`considerations`:: A collection of `Consideration` objects
+`actions`:: A collection of `Action` objects
+`approvals`:: A collection of `Approval` objects
+
+=== Action
+
+Represents actions taken within a resolution.
+
+`type`:: The action type(s). Can be a string or array of strings
+`dates`:: A collection of `ResolutionDate` objects
+`message`:: The action description as a string
+`subject`:: The action subject as a string (optional)
+
+=== Consideration
+
+Represents considerations that lead to a resolution.
+
+`type`:: The consideration type as a string
+`message`:: The consideration description as a string
+`date_effective`:: The effective date as a Date object (optional)
+
+=== Approval
+
+Represents approval information for a resolution.
+
+`type`:: The approval type as a string
+`degree`:: The degree of approval as a string (optional)
+`message`:: The approval message as a string (optional)
+
+== Copyright
+
+Copyright https://www.ribose.com[Ribose].
+
+== License
+
+The gem is available as open source under the terms of the
+https://opensource.org/licenses/BSD-2-Clause[2-Clause BSD License].

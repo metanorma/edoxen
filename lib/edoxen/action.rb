@@ -1,65 +1,32 @@
 # frozen_string_literal: true
 
 require "lutaml/model"
+require_relative "resolution_date"
 
 module Edoxen
   class Action < Lutaml::Model::Serializable
     ACTION_TYPE_ENUM = %w[
-      adopts thanks approves decides declares asks invites resolves confirms
-      welcomes recommends requests congratulates instructs urges appoints
-      resolves further instructs calls-upon encourages affirms elects
-      authorizes charges states remarks judges sanctions abrogates empowers
+      accepts acknowledges adoption adopts agrees allocates appoints appreciates
+      appreciation approves asks assigns chairs communicating confirms consults considers
+      creates decides defines delegates delivering directs disbands drafting elects
+      empowers encourages endorses estabilishes establishes gathering identifies
+      instructs investigates notes notifies recognises nominates
+      recognizes recommends registers regrets request requests resolves restates reminds replaces
+      scopes secures sends supports thanks welcomes withdraws
     ].freeze
 
     attribute :type, :string, values: ACTION_TYPE_ENUM
-    attribute :date_effective, :date
+    attribute :dates, ResolutionDate, collection: true
     attribute :message, :string
     attribute :subject, :string
+    attribute :degree, :string
 
     key_value do
       map "type", to: :type
-      map "date_effective", to: :date_effective
       map "message", to: :message
       map "subject", to: :subject
+      map "degree", to: :degree
+      map "dates", to: :dates
     end
   end
 end
-
-# Action {
-#   type: ActionType
-#   dateEffective: Date
-#   message: Text
-# }
-
-# enum ActionType {
-#   adopts
-#   thanks / expresses-appreciation (subjects)
-#   approves
-#   decides
-#   declares
-#   asks (subjects)
-#   invites / further invites (subjects)
-#   resolves
-#   confirms
-#   welcomes (subjects)
-#   recommends
-#   requests (subjects)
-#   congratulates (subjects)
-#   instructs (subjects)
-#   urges (subjects)
-#   appoints (subjects)
-#   resolves further
-#   instructs (subjects)
-#   calls upon (subjects)
-#   encourages (subjects)
-#   affirms / reaffirming (subjects)
-#   elects
-#   authorizes
-#   charges
-#   states
-#   remarks
-#   judges
-#   sanctions
-#   abrogates
-#   empowers
-# }
