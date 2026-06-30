@@ -6,11 +6,5 @@ module Edoxen
     attribute :kind, :string, values: Enums::URL_KIND
     attribute :ref, :string
     attribute :format, :string
-
-    key_value do
-      map "kind", to: :kind
-      map "ref", to: :ref
-      map "format", to: :format
-    end
   end
 end
