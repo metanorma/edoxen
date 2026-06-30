@@ -3,11 +3,13 @@
 require "edoxen"
 
 RSpec.configure do |config|
-  # Enable flags like --only-failures and --next-failure
+  # Persist pass/fail status so subsequent runs can target only the failing
+  # examples (`bundle exec rspec --only-failures`).
   config.example_status_persistence_file_path = ".rspec_status"
 
-  # Disable RSpec exposing methods globally on `Module` and `main`
   config.disable_monkey_patching!
+  config.order = :random
+  Kernel.srand config.seed
 
   config.expect_with :rspec do |c|
     c.syntax = :expect
