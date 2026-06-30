@@ -7,10 +7,5 @@ module Edoxen
   class ResolutionDate < Lutaml::Model::Serializable
     attribute :date, :date
     attribute :type, :string, values: Enums::RESOLUTION_DATE_TYPE
-
-    key_value do
-      map "date", to: :date
-      map "type", to: :type
-    end
   end
 end

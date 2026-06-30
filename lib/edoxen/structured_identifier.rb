@@ -8,10 +8,5 @@ module Edoxen
   class StructuredIdentifier < Lutaml::Model::Serializable
     attribute :prefix, :string
     attribute :number, :string
-
-    key_value do
-      map "prefix", to: :prefix
-      map "number", to: :number
-    end
   end
 end

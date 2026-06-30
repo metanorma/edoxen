@@ -8,12 +8,5 @@ module Edoxen
     attribute :degree, :string, values: Enums::APPROVAL_DEGREE
     attribute :date, ResolutionDate
     attribute :message, :string
-
-    key_value do
-      map "type", to: :type
-      map "degree", to: :degree
-      map "date", to: :date
-      map "message", to: :message
-    end
   end
 end

@@ -7,11 +7,5 @@ module Edoxen
     attribute :source, StructuredIdentifier
     attribute :destination, StructuredIdentifier
     attribute :type, :string, values: Enums::RESOLUTION_RELATION_TYPE
-
-    key_value do
-      map "source", to: :source
-      map "destination", to: :destination
-      map "type", to: :type
-    end
   end
 end

@@ -7,11 +7,5 @@ module Edoxen
     attribute :type, :string, values: Enums::CONSIDERATION_TYPE
     attribute :date_effective, ResolutionDate
     attribute :message, :string
-
-    key_value do
-      map "type", to: :type
-      map "date_effective", to: :date_effective
-      map "message", to: :message
-    end
   end
 end

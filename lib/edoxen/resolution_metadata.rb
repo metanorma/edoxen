@@ -12,15 +12,5 @@ module Edoxen
     attribute :source_urls, SourceUrl, collection: true
     attribute :city, :string
     attribute :country_code, :string
-
-    key_value do
-      map "title", to: :title
-      map "title_localized", to: :title_localized
-      map "date", to: :date
-      map "source", to: :source
-      map "source_urls", to: :source_urls
-      map "city", to: :city
-      map "country_code", to: :country_code
-    end
   end
 end
