@@ -16,6 +16,7 @@ module Edoxen
   require_relative "edoxen/action"
   require_relative "edoxen/approval"
   require_relative "edoxen/consideration"
+  require_relative "edoxen/localization"
   require_relative "edoxen/metadata"
   require_relative "edoxen/resolution"
   require_relative "edoxen/resolution_set"
