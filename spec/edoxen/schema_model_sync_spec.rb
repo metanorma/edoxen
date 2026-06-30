@@ -35,7 +35,7 @@ RSpec.describe "Schema <-> Ruby model shape sync" do
   SCHEMA_MODEL_BINDINGS.each do |ruby_class, schema_name|
     describe "#{ruby_class.name} <-> $defs/#{schema_name}" do
       let(:schema_def) { defs.fetch(schema_name) }
-      let(:schema_props) { (schema_def["properties"] || {}) }
+      let(:schema_props) { schema_def["properties"] || {} }
       let(:schema_required) { schema_def.fetch("required", []) }
 
       it "declares a $defs/#{schema_name} block" do
