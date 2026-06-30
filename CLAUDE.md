@@ -93,9 +93,13 @@ that propagate:
 
 `lib/edoxen/schema_validator.rb` is intentionally small:
 
-- `SchemaValidator::ValidationError` — rendered as `file:line:col: msg`.
-- `#validate_file(path)` → `Array<ValidationError>`.
-- `#validate_content(content, path)` → `Array<ValidationError>`.
+- `Edoxen::ValidationError` (defined in `lib/edoxen/error.rb`) — the unified
+  validation shape. `SchemaValidator::ValidationError` is a back-compat
+  alias. Carries `file`, `line`, `column`, `pointer`, `message_text`, and
+  `source` (`:schema` / `:model` / `:syntax`) so renderers can branch on
+  failure origin. Rendered as `file:line:col: msg at \`/pointer\``.
+- `#validate_file(path)` → `Array<Edoxen::ValidationError>`.
+- `#validate_content(content, path)` → `Array<Edoxen::ValidationError>`.
 - `SchemaValidator::LineMap` — builds an indent-heuristic
   `{json_pointer => line_no}` map and resolves a JSON-Schema data
   pointer to a line via longest-prefix match. **No path-shape
@@ -119,6 +123,16 @@ that propagate:
   result back. Preserves any `# yaml-language-server: $schema=...`
   directive in the first 5 lines.
 
+Both commands delegate their expand/sort/empty/header/loop/tally/summary/exit
+scaffold to `Edoxen::Cli::Batch` — the deep module behind the seam. The
+command bodies are per-file blocks returning `Batch::Result.ok(msg)` or
+`Batch::Result.bad(errors)`. Adding a third command (e.g. `lint`, `diff`)
+is one block.
+
+`Resolution#in_language(code, fallback:)` and `Resolution#primary_localization`
+provide the canonical lookup interface — callers should not iterate
+`localizations.find { |l| l.language_code == code }` directly.
+
 Exit code is non-zero if any file fails.
 
 ## Build, test, lint
@@ -139,15 +153,15 @@ mkdir -p /tmp/out && bundle exec exe/edoxen normalize "spec/fixtures/*.yaml" --o
 
 - **No `double()` in specs** — use real `Edoxen::*` instances and fixture files.
 - **Serialization is framework-only.** Never hand-roll `to_h` / `from_h` /
-  `to_yaml` / `from_yaml` / `to_json` / `from_json` on a model class. Use
-  `attribute` + `key_value do … end` and let lutaml-model do it. Renames
-  are `map "wire_name", to: :attr` — never key-swapping inside a method.
+  `to_yaml` / `from_yaml` / `to_json` / `from_json` on a model class. Declare
+  `attribute` only — lutaml-model auto-emits an identity map for each
+  attribute when no `key_value` block is present. Add a `key_value do … end`
+  block with `map "wire_name", to: :attr` only when the wire name differs
+  from the attribute name.
 - **Wire names are `snake_case`.** Even when the LUTAML notation uses
   camelCase, the YAML wire form is `snake_case` (`agenda_item`, not
-  `agendaItem`). The attribute name on the Ruby side is also `snake_case`;
-  when they match exactly, drop the explicit `map` declaration only after
-  checking lutaml-model supports it. (Today lutaml-model needs an explicit
-  `map` for `key_value`; do not delete them.)
+  `agendaItem`). The attribute name on the Ruby side is also `snake_case`,
+  and the wire name defaults to it.
 - **Enums on the model and the schema must agree.** When you add or remove
   a value to `Enums::*`, also update the matching `enum:` list in
   `schema/edoxen.yaml` $defs. The `schema_enum_sync_spec` will catch any
