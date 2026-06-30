@@ -537,6 +537,82 @@ Represents approval information for a resolution.
 `degree`:: The degree of approval as a string (optional)
 `message`:: The approval message as a string (optional)
 
+== Multilingual support
+
+Edoxen supports multilingual resolution sets using the glossarist-style
+`localizations[]` pattern. Each `Resolution` carries its
+language-agnostic admin fields (identifier, doi, urn, agenda_item,
+dates) plus a `localizations[]` array with one entry per language.
+Each `Localization` declares its `language_code` (ISO 639-3 three-letter
+code) and `script` (ISO 15924 four-letter code), then carries the
+monolingual title, subject, message, considerations, actions, and
+approvals.
+
+=== Why localizations[]
+
+* Single file per meeting (no `-en.yaml` / `-fr.yaml` split)
+* Translators can compare EN+FR side-by-side in the same file
+* Language-agnostic fields (identifier, doi) declared once, not duplicated
+* Forward-compatible: adding a third language is one new entry per
+  resolution, no schema change
+
+=== Sample shape
+
+[source,yaml]
+----
+resolutions:
+  - identifier: CIML/2025/44
+    doi: 10.63493/resolutions/ciml202544
+    urn: urn:oiml:doc:ciml:resolution:2025-44
+    agenda_item: "16.2"
+    dates:
+      - { start: '2025-10-13', kind: decision }
+    localizations:
+      - language_code: eng
+        script: Latn
+        title: Decision on the renewal of the contract of Mr Anthony Donnellan
+        subject: CIML
+        actions:
+          - type: decides
+            message: |
+              The Committee decides to renew the contract of
+              Mr Anthony Donnellan as BIML Director.
+      - language_code: fra
+        script: Latn
+        title: Décision sur le renouvellement du contrat de M. Anthony Donnellan
+        subject: CIML
+        actions:
+          - type: decides
+            message: |
+              Le Comité décide de renouveler le contrat de
+              M. Anthony Donnellan en tant que Directeur du BIML.
+----
+
+=== Localization
+
+A monolingual rendering of a Resolution.
+
+`language_code`:: ISO 639-3 three-letter language code (e.g. `eng`,
+  `fra`, `deu`, `spa`, `jpn`, `rus`, `ara`). Pattern: `^[a-z]{3}$`.
+`script`:: ISO 15924 four-letter script code (e.g. `Latn`, `Cyrl`,
+  `Hant`, `Arab`). Pattern: `^[A-Z][a-z]{3}$`.
+`title`:: Localized resolution title.
+`subject`:: Localized subject or scope.
+`message`:: Localized resolution message (optional).
+`considering`:: Localized considering clause (optional).
+`considerations`:: Localized considerations (optional).
+`actions`:: Localized actions.
+`approvals`:: Localized approvals (optional).
+
+=== SourceUrl
+
+A per-language source-PDF reference used in `metadata.source_urls[]`.
+
+`ref`:: The URL string.
+`format`:: Document format (e.g. `pdf`, `html`).
+`language_code`:: ISO 639-3 code for the language of this URL's
+  content.
+
 == Copyright
 
 Copyright https://www.ribose.com[Ribose].

@@ -13,7 +13,8 @@ properties:
     properties:
       title:
         type: string
-        description: "Title of the resolution set"
+        description: "Title of the resolution set (language-neutral; for
+          per-language titles, see Resolution.localizations)."
       identifier:
         type: string
         description: "Identifier for the resolution set (e.g., '2019-01')"
@@ -28,6 +29,39 @@ properties:
       venue:
         type: string
         description: "Meeting venue"
+      city:
+        type: string
+        description: "IATA city code (3-letter) of the host city, e.g. BER, CPT, PAR."
+      country_code:
+        type: string
+        description: "ISO 3166-1 alpha-2 country code of the host country."
+      source_urls:
+        type: array
+        description: "Canonical URLs to the source PDFs in each available language."
+        items:
+          type: object
+          properties:
+            ref:
+              type: string
+              description: "URL string."
+            format:
+              type: string
+              description: "Document format, e.g. 'pdf', 'html'."
+            lang:
+              type: string
+              description: "ISO 639-1 language code for this version (legacy)."
+            language_code:
+              type: string
+              description: "ISO 639-3 three-letter language code for this version."
+              pattern: "^[a-z]{3}$"
+          required:
+            - ref
+          additionalProperties: false
+      title_localized:
+        type: array
+        description: "Per-language title records (glossarist-style). Optional."
+        items:
+          $ref: "#/$defs/Localization"
       chair:
         type: string
         description: "Meeting chair"
@@ -61,7 +95,9 @@ required:
 $defs:
   Resolution:
     type: object
-    description: "A single resolution"
+    description: "A single resolution. Language-agnostic admin fields live
+      at this level; every translatable field is wrapped inside a
+      `localizations[]` entry (one per available language)."
     properties:
       identifier:
         oneOf:
@@ -69,9 +105,13 @@ $defs:
           - type: integer
         description: "Resolution identifier (e.g., '2019-01' or 1)"
 
-      title:
+      doi:
         type: string
-        description: "Resolution title"
+        description: "Digital Object Identifier for this resolution."
+
+      urn:
+        type: string
+        description: "Uniform Resource Name for this resolution."
 
       type:
         type: string
@@ -88,41 +128,25 @@ $defs:
           type: string
         description: "Resolution categories"
 
-      subject:
-        type: string
-        description: "Subject or scope of the resolution"
-
       dates:
         type: array
         items:
           $ref: "#/$defs/ComplexDate"
         description: "Array of relevant dates with start/end structure"
 
-      message:
+      agenda_item:
         type: string
-        description: "Resolution message"
+        description: "Agenda item number this resolution corresponds to
+          (e.g. '11.2', '16.3')."
 
-      considering:
-        type: string
-        description: "Considering clause"
-
-      considerations:
+      localizations:
         type: array
+        description: "Per-language content for this resolution. At least
+          one entry is required. Each entry declares its ISO 639-3
+          language_code and ISO 15924 script."
         items:
-          $ref: "#/$defs/Consideration"
-        description: "Array of considerations leading to the resolution"
-
-      approvals:
-        type: array
-        items:
-          $ref: "#/$defs/Approval"
-        description: "Approval information"
-
-      actions:
-        type: array
-        items:
-          $ref: "#/$defs/Action"
-        description: "Actions taken in the resolution"
+          $ref: "#/$defs/Localization"
+        minItems: 1
 
       urls:
         type: array
@@ -142,9 +166,55 @@ $defs:
 
     additionalProperties: false
     required:
-      - subject
       - identifier
-      - actions
+      - localizations
+
+  Localization:
+    type: object
+    description: "A monolingual rendering of a Resolution. Mirrors the
+      glossarist LocalizedConcept pattern: language-agnostic fields
+      live on the parent; per-language content lives here."
+    properties:
+      language_code:
+        type: string
+        description: "ISO 639-3 three-letter language code (e.g. 'eng',
+          'fra', 'jpn', 'rus', 'ara')."
+        pattern: "^[a-z]{3}$"
+      script:
+        type: string
+        description: "ISO 15924 four-letter script code (e.g. 'Latn',
+          'Cyrl', 'Hant', 'Arab')."
+        pattern: "^[A-Z][a-z]{3}$"
+      title:
+        type: string
+        description: "Localized resolution title."
+      subject:
+        type: string
+        description: "Localized subject or scope."
+      message:
+        type: string
+        description: "Localized resolution message."
+      considering:
+        type: string
+        description: "Localized considering clause."
+      considerations:
+        type: array
+        items:
+          $ref: "#/$defs/Consideration"
+        description: "Considerations in this language."
+      actions:
+        type: array
+        items:
+          $ref: "#/$defs/Action"
+        description: "Actions in this language."
+      approvals:
+        type: array
+        items:
+          $ref: "#/$defs/Approval"
+        description: "Approval information for this localization."
+    required:
+      - language_code
+    additionalProperties: false
 
   ComplexDate:
     type: object
@@ -216,11 +286,11 @@ $defs:
 
       message:
         type: string
-        description: "Consideration text"
+        description: "Consideration text."
 
       subject:
         type: string
-        description: "Subject of the consideration"
+        description: "Subject of the consideration."
 
     required:
     - type
@@ -328,11 +398,11 @@ $defs:
 
       message:
         type: string
-        description: "Action text"
+        description: "Action text."
 
       subject:
         type: string
-        description: "Subject of the action"
+        description: "Subject of the action."
 
       degree:
         type: string
