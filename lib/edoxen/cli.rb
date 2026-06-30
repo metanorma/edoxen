@@ -4,54 +4,101 @@ require "thor"
 require "fileutils"
 
 module Edoxen
-  # Thor command-line surface for the gem. Two responsibilities:
-  #   * `validate PATTERN` — runs both JSON-Schema validation and the
-  #     Ruby model parser against each matching YAML file.
-  #   * `normalize PATTERN (--output DIR | --inplace)` — round-trips each
-  #     matching YAML file through the Ruby model, preserving any
-  #     `# yaml-language-server: $schema=...` directive on the first line.
-  #
-  # The CLI deliberately does NOT own schema-or-model decisions — those
-  # live in `SchemaValidator` and `Lutaml::Model` respectively. It only
-  # glues them together and formats output.
   class Cli < Thor
+    # Deep module behind the per-command interface. Owns the
+    # expand/sort/empty/header/loop/tally/summary/exit scaffold so
+    # `validate` and `normalize` collapse to per-file blocks.
+    #
+    # Commands call `Batch.run(self, pattern, header:)` and yield a block
+    # that returns `Result.ok(message)` or `Result.bad(errors)`. The
+    # batch runner prints progress, tallies, prints the summary, and
+    # exits with the right code.
+    #
+    # In-process; no adapter. The seam is the call site in each
+    # command method — internal to the CLI.
+    module Batch
+      # Per-file outcome. `ok` carries an optional message appended to
+      # the success indicator (e.g. "NORMALIZED → /out/path"). `bad`
+      # carries a list of pre-formatted error strings.
+      Result = Struct.new(:status, :message, :errors) do
+        def self.ok(message = nil)
+          new(:ok, message, nil)
+        end
+
+        def self.bad(errors)
+          new(:bad, nil, Array(errors))
+        end
+      end
+
+      module_function
+
+      # Run a batch over every YAML file matching `pattern`.
+      #
+      # Yields each file path to the caller's block. Block must return
+      # a Batch::Result. The batch runner handles progress output,
+      # tallies, summary, and the exit code.
+      def run(cli, pattern, header:, summary_extra: [])
+        files = expand(pattern)
+        if files.empty?
+          cli.say "No files found matching pattern: #{pattern}", :red
+          exit 1
+        end
+
+        cli.say "#{header} #{files.size} file(s)...", :blue
+
+        ok_count = 0
+        bad_count = 0
+
+        files.each do |file|
+          $stdout.print "  #{File.basename(file)}... "
+          result = yield file
+          if result.status == :ok
+            label = result.message ? "✅ #{result.message}" : "✅"
+            cli.say label, :green
+            ok_count += 1
+          else
+            cli.say "❌ INVALID", :red
+            bad_count += 1
+            Array(result.errors).each { |e| cli.say "    #{e}", :red }
+          end
+        end
+
+        print_summary(cli, files.size, ok_count, bad_count, summary_extra)
+        exit(bad_count.positive? ? 1 : 0)
+      end
+
+      def expand(pattern)
+        Dir.glob(pattern).select { |f| File.file?(f) && f.match?(/\.ya?ml\z/i) }.sort
+      end
+
+      def print_summary(cli, total, ok_count, bad_count, summary_extra)
+        cli.say "\n📊 Summary:", :blue
+        cli.say "  Total: #{total}", :blue
+        cli.say "  Success: #{ok_count}, Failed: #{bad_count}",
+                bad_count.positive? ? :red : :green
+        rate = total.zero? ? 0 : ((ok_count.to_f / total) * 100).round(1)
+        cli.say "  Success rate: #{rate}%", :blue
+        summary_extra.each { |label, value| cli.say "  #{label}: #{value}", :blue }
+      end
+    end
+
     package_name "edoxen"
 
     desc "validate YAML_FILE_PATTERN",
          "Validate one or more Edoxen YAML files against the schema and the model."
 
     def validate(pattern)
-      files = expand_yaml_pattern(pattern)
-      if files.empty?
-        say "No files found matching pattern: #{pattern}", :red
-        exit 1
-      end
-
-      say "🔍 Validating #{files.size} file(s)...", :blue
-
       validator = SchemaValidator.new
-      valid_count = 0
-      invalid_count = 0
-
-      files.each do |file|
-        print "  #{File.basename(file)}... "
-
+      Batch.run(self, pattern, header: "🔍 Validating") do |file|
         schema_errors = validator.validate_file(file)
         model_errors = collect_model_errors(file)
-
         if schema_errors.empty? && model_errors.empty?
-          say "✅ VALID", :green
-          valid_count += 1
+          Batch::Result.ok("VALID")
         else
-          say "❌ INVALID", :red
-          invalid_count += 1
-          schema_errors.each { |e| say "    #{e.to_clickable_format}", :red }
-          model_errors.each { |m| say "    #{file}:1:1: #{m}", :red }
+          errors = (schema_errors + model_errors).map(&:to_clickable_format)
+          Batch::Result.bad(errors)
         end
       end
-
-      print_summary(files.size, valid_count, invalid_count, validator_type: :binary)
-      exit(invalid_count.positive? ? 1 : 0)
     end
 
     desc "normalize YAML_FILE_PATTERN",
@@ -61,77 +108,34 @@ module Edoxen
     option :inplace, type: :boolean, desc: "Modify files in place (no backup)"
 
     def normalize(pattern)
-      if options[:output] && options[:inplace]
-        say "Error: Cannot use both --output and --inplace options", :red
+      unless valid_normalize_options?
+        say normalize_options_error, :red
         exit 1
       end
 
-      unless options[:output] || options[:inplace]
-        say "Error: Must specify either --output or --inplace option", :red
-        exit 1
+      summary_extra = [
+        ["  Output directory", options[:output]],
+        ["  Mode", options[:inplace] ? "in place" : "--output"]
+      ].compact
+
+      Batch.run(self, pattern, header: "🔄 Normalizing", summary_extra: summary_extra) do |file|
+        Batch::Result.ok(normalize_file(file))
+      rescue StandardError => e
+        Batch::Result.bad(["#{file}:1:1: #{e.message}"])
       end
-
-      files = expand_yaml_pattern(pattern)
-      if files.empty?
-        say "No files found matching pattern: #{pattern}", :red
-        exit 1
-      end
-
-      say "🔄 Normalizing #{files.size} file(s)...", :blue
-
-      success_count = 0
-      error_count = 0
-
-      files.each do |file|
-        print "  #{File.basename(file)}... "
-        begin
-          yaml_language_server_comment = extract_yaml_language_server_comment(File.read(file))
-          normalized = ResolutionCollection.from_yaml(File.read(file)).to_yaml
-          normalized = "#{yaml_language_server_comment}\n#{normalized}" if yaml_language_server_comment
-
-          if options[:inplace]
-            File.write(file, normalized)
-            say "✅ NORMALIZED", :green
-          else
-            out = File.join(options[:output], File.basename(file))
-            FileUtils.mkdir_p(File.dirname(out))
-            File.write(out, normalized)
-            say "✅ NORMALIZED → #{out}", :green
-          end
-          success_count += 1
-        rescue StandardError => e
-          say "❌ FAILED — #{e.message}", :red
-          error_count += 1
-        end
-      end
-
-      print_summary(files.size, success_count, error_count, validator_type: :lax,
-                                                            extra: [
-                                                              ["  Output directory", options[:output]],
-                                                              ["  Mode", options[:inplace] ? "in place" : "--output"]
-                                                            ].compact)
-      exit(error_count.positive? ? 1 : 0)
-    end
-
-    no_commands do
-      # Reserved for private Thor plumbing if we add it later.
     end
 
     private
 
-    def expand_yaml_pattern(pattern)
-      Dir.glob(pattern).select { |f| File.file?(f) && f.match?(/\.ya?ml\z/i) }.sort
-    end
-
-    # Round-trip the file through the model to catch structural issues
-    # (missing nested classes, type mismatches) that the JSON-Schema can't
-    # express. The model is permissive about field names — schema is the
-    # strict source.
     def collect_model_errors(file)
       ResolutionCollection.from_yaml(File.read(file))
       []
     rescue StandardError => e
-      ["Model parsing failed: #{e.message}"]
+      [Edoxen::ValidationError.new(
+        file: file, line: 1, column: 1,
+        message_text: "Model parsing failed: #{e.message}",
+        source: Edoxen::ValidationError::SOURCE_MODEL
+      )]
     end
 
     def extract_yaml_language_server_comment(content)
@@ -139,18 +143,39 @@ module Edoxen
       lines.find { |l| l.strip.match?(/\A#\s*yaml-language-server:\s*\$schema=/) }&.rstrip
     end
 
-    def print_summary(total, ok_count, bad_count, validator_type:, extra: [])
-      say "\n📊 Summary:", :blue
-      say "  Total: #{total}", :blue
-      label_text = if validator_type == :binary
-                     "  Valid: #{ok_count}, Invalid: #{bad_count}"
-                   else
-                     "  Success: #{ok_count}, Failed: #{bad_count}"
-                   end
-      say label_text, bad_count.positive? ? :red : :green
-      success_rate = total.zero? ? 0 : ((ok_count.to_f / total) * 100).round(1)
-      say "  Success rate: #{success_rate}%", :blue
-      extra.each { |label, value| say "  #{label}: #{value}", :blue }
+    def valid_normalize_options?
+      return false if options[:output] && options[:inplace]
+      return false unless options[:output] || options[:inplace]
+
+      true
+    end
+
+    def normalize_options_error
+      if options[:output] && options[:inplace]
+        "Error: Cannot use both --output and --inplace options"
+      else
+        "Error: Must specify either --output or --inplace option"
+      end
+    end
+
+    # Writes the normalized YAML either to the original file (--inplace)
+    # or under the --output directory. Returns a one-line status message
+    # for the batch runner to print after the ✅.
+    def normalize_file(file)
+      original = File.read(file)
+      yaml_language_server_comment = extract_yaml_language_server_comment(original)
+      normalized = ResolutionCollection.from_yaml(original).to_yaml
+      normalized = "#{yaml_language_server_comment}\n#{normalized}" if yaml_language_server_comment
+
+      if options[:inplace]
+        File.write(file, normalized)
+        "NORMALIZED"
+      else
+        out = File.join(options[:output], File.basename(file))
+        FileUtils.mkdir_p(File.dirname(out))
+        File.write(out, normalized)
+        "NORMALIZED → #{out}"
+      end
     end
   end
 end
