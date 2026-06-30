@@ -1,12 +1,8 @@
 # frozen_string_literal: true
 
-# MeetingIdentifier {
-#   venue: String
-#   date: DateTime
-# }
-require "lutaml/model"
-
 module Edoxen
+  # Identifier of a meeting (venue + date). Singular — the meeting a
+  # particular Resolution belongs to.
   class MeetingIdentifier < Lutaml::Model::Serializable
     attribute :venue, :string
     attribute :date, :date

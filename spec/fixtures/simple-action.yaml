@@ -1,8 +1,26 @@
 ---
-type: resolves
-dates:
-  - start: '2024-01-15'
-    kind: effective
-message: resolves to implement the new standard
-subject: ISO/TC 154
-degree: unanimous
+# Minimal ResolutionCollection that contains a single Action for
+# spec/edoxen/action_spec.rb. In real data, Actions live inside a
+# Localization (Action is always a child of Localization).
+metadata:
+  title: Simple action fixture
+  date: 2024-01-15
+  source: Edoxen test fixture
+resolutions:
+  - identifier:
+    - prefix: TEST
+      number: "0001"
+    type: decision
+    dates:
+      - date: 2024-01-15
+        type: adoption
+    localizations:
+      - language_code: eng
+        script: Latn
+        title: Test resolution with one action
+        actions:
+          - type: resolves
+            date_effective:
+              date: 2024-01-15
+              type: adoption
+            message: resolves to implement the new standard
