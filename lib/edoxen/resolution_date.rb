@@ -1,17 +1,16 @@
 # frozen_string_literal: true
 
-require "lutaml/model"
-
 module Edoxen
+  # Date with semantic kind (adoption, drafted, discussed).
+  # ResolutionDate is the only carrier of a *typed* date in the model —
+  # plain `Date` in lutaml-model has no semantic context.
   class ResolutionDate < Lutaml::Model::Serializable
-    attribute :start, :date
-    attribute :end, :date
-    attribute :kind, :string, values: %w[ballot enactment effective decision meeting]
+    attribute :date, :date
+    attribute :type, :string, values: Enums::RESOLUTION_DATE_TYPE
 
     key_value do
-      map "start", to: :start
-      map "end", to: :end
-      map "kind", to: :kind
+      map "date", to: :date
+      map "type", to: :type
     end
   end
 end

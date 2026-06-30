@@ -1,25 +1,17 @@
 # frozen_string_literal: true
 
-require "lutaml/model"
-require_relative "resolution_date"
-
 module Edoxen
+  # Basis for a resolution: a verb (having, noting, considering, ...) plus
+  # one effective date and the elaborated reasoning.
   class Consideration < Lutaml::Model::Serializable
-    CONSIDERATION_TYPE_ENUM = %w[
-      acknowledging basing considering identifying noting recalling recognises according following
-      recognising recognizing
-    ].freeze
-
-    attribute :type, :string, values: CONSIDERATION_TYPE_ENUM
-    attribute :dates, ResolutionDate, collection: true
+    attribute :type, :string, values: Enums::CONSIDERATION_TYPE
+    attribute :date_effective, ResolutionDate
     attribute :message, :string
-    attribute :subject, :string
 
     key_value do
       map "type", to: :type
-      map "dates", to: :dates
+      map "date_effective", to: :date_effective
       map "message", to: :message
-      map "subject", to: :subject
     end
   end
 end

@@ -1,33 +1,20 @@
 # frozen_string_literal: true
 
-require "lutaml/model"
-require_relative "resolution_date"
-require_relative "consideration"
-require_relative "approval"
-require_relative "action"
-require_relative "meeting_identifier"
-require_relative "resolution_relation"
-require_relative "localization"
-
 module Edoxen
+  # A formal Resolution. Language-agnostic admin fields live here; every
+  # translatable field is wrapped inside `localizations[]` (one entry per
+  # available language; at least one is required by the schema).
   class Resolution < Lutaml::Model::Serializable
-    RESOLUTION_TYPE_ENUM = %w[resolution recommendation decision declaration].freeze
-
-    # Language-agnostic admin fields. Per-language content lives
-    # inside `localizations[]` (see Localization).
-    attribute :identifier, :string
-    attribute :type, :string, values: RESOLUTION_TYPE_ENUM
+    attribute :identifier, StructuredIdentifier, collection: true
+    attribute :type, :string, values: Enums::RESOLUTION_TYPE
     attribute :doi, :string
     attribute :urn, :string
     attribute :agenda_item, :string
     attribute :dates, ResolutionDate, collection: true
     attribute :categories, :string, collection: true
-    attribute :meeting_identifier, MeetingIdentifier
+    attribute :meeting, MeetingIdentifier
     attribute :relations, ResolutionRelation, collection: true
     attribute :urls, Url, collection: true
-
-    # One entry per available language. At least one is required
-    # (enforced by the schema, not by lutaml-model).
     attribute :localizations, Localization, collection: true
 
     key_value do
@@ -38,7 +25,7 @@ module Edoxen
       map "agenda_item", to: :agenda_item
       map "dates", to: :dates
       map "categories", to: :categories
-      map "meeting_identifier", to: :meeting_identifier
+      map "meeting", to: :meeting
       map "relations", to: :relations
       map "urls", to: :urls
       map "localizations", to: :localizations

@@ -1,91 +1,32 @@
-# yaml-language-server: $schema=http://json-schema.org/draft-07/schema
 ---
 $schema: "http://json-schema.org/draft-07/schema#"
 $id: "https://github.com/metanorma/edoxen/schema/edoxen.yaml"
-title: "Edoxen Resolution Set Schema"
-description: "Schema for validating Edoxen resolution set YAML files"
+title: "Edoxen Resolution Collection Schema"
+description: |
+  Schema for validating Edoxen ResolutionCollection YAML files.
+
+  Mirrors the canonical LutaML information model in
+  https://github.com/metanorma/edoxen-model/tree/main/models .
+
+  The enum constants declared under `$defs` (ActionType,
+  ConsiderationType, ApprovalType, ApprovalDegree, ResolutionType,
+  ResolutionDateType, ResolutionRelationType, UrlKind) are the
+  authoritative wire values. `spec/edoxen/schema_enum_sync_spec.rb`
+  asserts each one is character-for-character identical to the
+  corresponding `Edoxen::Enums::*` frozen array.
+
+  Trade-off: json_schemer's `valid_values` is not populated when an
+  `enum` is reached via `$ref`, so the validator's enum-violation
+  message degrades to "value ... is not one of: (see schema)". This
+  is documented in `Edoxen::SchemaValidator#format_message`.
 type: object
+additionalProperties: false
 
 properties:
   metadata:
-    type: object
-    description: "Metadata about the resolution set"
-    properties:
-      title:
-        type: string
-        description: "Title of the resolution set (language-neutral; for
-          per-language titles, see Resolution.localizations)."
-      identifier:
-        type: string
-        description: "Identifier for the resolution set (e.g., '2019-01')"
-      dates:
-        type: array
-        description: "Array of dates related to the set"
-        items:
-          $ref: "#/$defs/ComplexDate"
-      source:
-        type: string
-        description: "Source organization or secretariat"
-      venue:
-        type: string
-        description: "Meeting venue"
-      city:
-        type: string
-        description: "IATA city code (3-letter) of the host city, e.g. BER, CPT, PAR."
-      country_code:
-        type: string
-        description: "ISO 3166-1 alpha-2 country code of the host country."
-      source_urls:
-        type: array
-        description: "Canonical URLs to the source PDFs in each available language."
-        items:
-          type: object
-          properties:
-            ref:
-              type: string
-              description: "URL string."
-            format:
-              type: string
-              description: "Document format, e.g. 'pdf', 'html'."
-            lang:
-              type: string
-              description: "ISO 639-1 language code for this version (legacy)."
-            language_code:
-              type: string
-              description: "ISO 639-3 three-letter language code for this version."
-              pattern: "^[a-z]{3}$"
-          required:
-            - ref
-          additionalProperties: false
-      title_localized:
-        type: array
-        description: "Per-language title records (glossarist-style). Optional."
-        items:
-          $ref: "#/$defs/Localization"
-      chair:
-        type: string
-        description: "Meeting chair"
-      attendees:
-        type: array
-        items:
-          type: string
-        description: "List of attendees"
-      apologies:
-        type: array
-        items:
-          type: string
-        description: "List of apologies"
-      urls:
-        type: array
-        items:
-          $ref: "#/$defs/Url"
-        description: "Array of URLs related to the resolution set"
-
-    additionalProperties: false
-
+    $ref: "#/$defs/ResolutionMetadata"
   resolutions:
     type: array
-    description: "Array of resolutions"
     items:
       $ref: "#/$defs/Resolution"
 
@@ -93,399 +34,349 @@ required:
   - resolutions
 
 $defs:
-  Resolution:
+
+  # ====================================================================
+  # Identifiers and references.
+  # ====================================================================
+
+  StructuredIdentifier:
     type: object
-    description: "A single resolution. Language-agnostic admin fields live
-      at this level; every translatable field is wrapped inside a
-      `localizations[]` entry (one per available language)."
-    properties:
-      identifier:
-        oneOf:
-          - type: string
-          - type: integer
-        description: "Resolution identifier (e.g., '2019-01' or 1)"
-
-      doi:
-        type: string
-        description: "Digital Object Identifier for this resolution."
-
-      urn:
-        type: string
-        description: "Uniform Resource Name for this resolution."
-
-      type:
-        type: string
-        enum:
-          - "resolution"
-          - "recommendation"
-          - "decision"
-          - "declaration"
-        description: "Type of resolution"
-
-      categories:
-        type: array
-        items:
-          type: string
-        description: "Resolution categories"
-
-      dates:
-        type: array
-        items:
-          $ref: "#/$defs/ComplexDate"
-        description: "Array of relevant dates with start/end structure"
-
-      agenda_item:
-        type: string
-        description: "Agenda item number this resolution corresponds to
-          (e.g. '11.2', '16.3')."
-
-      localizations:
-        type: array
-        description: "Per-language content for this resolution. At least
-          one entry is required. Each entry declares its ISO 639-3
-          language_code and ISO 15924 script."
-        items:
-          $ref: "#/$defs/Localization"
-        minItems: 1
-
-      urls:
-        type: array
-        items:
-          $ref: "#/$defs/Url"
-        description: "Array of URLs related to the resolution"
-
-      meeting:
-        $ref: "#/$defs/MeetingIdentifier"
-        description: "Meeting information"
-
-      relations:
-        type: array
-        items:
-          $ref: "#/$defs/ResolutionRelations"
-        description: "Relations to other resolutions"
-
+    description: "A resolution identifier (prefix + number). A Resolution may carry 1..* of these."
     additionalProperties: false
-    required:
-      - identifier
-      - localizations
+    required: [prefix, number]
+    properties:
+      prefix:
+        type: string
+        description: "Authority prefix, e.g. 'ISO', 'OIML', 'CIML'."
+      number:
+        type: string
+        description: "Resolution number issued under that prefix."
+
+  MeetingIdentifier:
+    type: object
+    description: "Identifies the meeting a Resolution belongs to."
+    additionalProperties: false
+    properties:
+      venue:
+        type: string
+        description: "Meeting venue name (free text)."
+      date:
+        type: string
+        format: date
+        description: "Meeting date."
+
+  Url:
+    type: object
+    description: "URL with a kind (access / report) and an optional format hint."
+    additionalProperties: false
+    required: [kind, ref]
+    properties:
+      kind:
+        $ref: "#/$defs/UrlKind"
+      ref:
+        type: string
+      format:
+        type: string
+
+  ResolutionRelation:
+    type: object
+    description: "Directed relation between two resolutions identified by their StructuredIdentifier."
+    additionalProperties: false
+    required: [source, destination, type]
+    properties:
+      source:
+        $ref: "#/$defs/StructuredIdentifier"
+      destination:
+        $ref: "#/$defs/StructuredIdentifier"
+      type:
+        $ref: "#/$defs/ResolutionRelationType"
+
+  # ====================================================================
+  # Date carriers.
+  # ====================================================================
+
+  ResolutionDate:
+    type: object
+    description: "Date with semantic kind (adoption / drafted / discussed)."
+    additionalProperties: false
+    required: [date, type]
+    properties:
+      date:
+        type: string
+        format: date
+        description: "The date itself."
+      type:
+        $ref: "#/$defs/ResolutionDateType"
+
+  # ====================================================================
+  # Per-localization sub-structures. Each is owned by exactly one
+  # Language; the language_code discriminator lives on Localization.
+  # ====================================================================
+
+  Action:
+    type: object
+    description: "A verb + one effective date + human-readable message."
+    additionalProperties: false
+    required: [type, message, date_effective]
+    properties:
+      type:
+        $ref: "#/$defs/ActionType"
+      date_effective:
+        $ref: "#/$defs/ResolutionDate"
+      message:
+        type: string
+
+  Approval:
+    type: object
+    description: "Approval record: vote type, consensus degree, date, message."
+    additionalProperties: false
+    required: [type, degree, date]
+    properties:
+      type:
+        $ref: "#/$defs/ApprovalType"
+      degree:
+        $ref: "#/$defs/ApprovalDegree"
+      date:
+        $ref: "#/$defs/ResolutionDate"
+      message:
+        type: string
+
+  Consideration:
+    type: object
+    description: "The basis for a Resolution: a verb + one effective date + reasoning."
+    additionalProperties: false
+    required: [type, message, date_effective]
+    properties:
+      type:
+        $ref: "#/$defs/ConsiderationType"
+      date_effective:
+        $ref: "#/$defs/ResolutionDate"
+      message:
+        type: string
 
   Localization:
     type: object
-    description: "A monolingual rendering of a Resolution. Mirrors the
-      glossarist LocalizedConcept pattern: language-agnostic fields
-      live on the parent; per-language content lives here."
+    description: |
+      A monolingual rendering of a Resolution. Mirrors the glossarist
+      LocalizedConcept pattern: language-agnostic fields live on the
+      parent Resolution; per-language content lives here.
+    additionalProperties: false
+    required: [language_code]
     properties:
       language_code:
         type: string
-        description: "ISO 639-3 three-letter language code (e.g. 'eng',
-          'fra', 'jpn', 'rus', 'ara')."
         pattern: "^[a-z]{3}$"
+        description: "ISO 639-3 three-letter language code (eng, fra, deu, spa, jpn, ...)."
       script:
         type: string
-        description: "ISO 15924 four-letter script code (e.g. 'Latn',
-          'Cyrl', 'Hant', 'Arab')."
         pattern: "^[A-Z][a-z]{3}$"
+        description: "ISO 15924 four-letter script code (Latn, Cyrl, Hant, Arab)."
       title:
         type: string
-        description: "Localized resolution title."
       subject:
         type: string
-        description: "Localized subject or scope."
       message:
         type: string
-        description: "Localized resolution message."
       considering:
         type: string
-        description: "Localized considering clause."
       considerations:
         type: array
         items:
           $ref: "#/$defs/Consideration"
-        description: "Considerations in this language."
-      actions:
-        type: array
-        items:
-          $ref: "#/$defs/Action"
-        description: "Actions in this language."
       approvals:
         type: array
         items:
           $ref: "#/$defs/Approval"
-        description: "Approval information for this localization."
-    required:
-      - language_code
-    additionalProperties: false
+      actions:
+        type: array
+        items:
+          $ref: "#/$defs/Action"
 
-  ComplexDate:
+  SourceUrl:
     type: object
-    description: "Date with start and end"
-    properties:
-      start:
-        type: string
-        format: date
-        description: "Start date or single date if no end date"
-      end:
-        type: string
-        format: date
-        description: "End date (optional)"
-      kind:
-        type: string
-        enum:
-          - "enactment"
-          - "ballot"
-          - "effective"
-          - "decision"
-          - "meeting"
-        description: "Kind of date (e.g., enactment, ballot, effective)"
-    required:
-    - kind
+    description: "Per-language canonical source URL (e.g. one PDF per language)."
     additionalProperties: false
-
-  Url:
-    type: object
-    description: "URL with kind and reference"
+    required: [ref, format, language_code]
     properties:
-      kind:
-        type: string
-        enum:
-          - "access"
-          - "report"
-        description: "Kind of URL (e.g., access, report)"
       ref:
         type: string
-        description: "Reference URL"
+        description: "The URL string."
       format:
         type: string
-        description: "Format of the URL (e.g., 'html', 'pdf')"
-    additionalProperties: false
+        description: "Document format, e.g. 'pdf', 'html'."
+      language_code:
+        type: string
+        pattern: "^[a-z]{3}$"
 
-  Consideration:
+  # ====================================================================
+  # Top-level structures.
+  # ====================================================================
+
+  Resolution:
     type: object
-    description: "A consideration leading to a resolution"
-    properties:
-      type:
-        type: string
-        enum:
-          - "acknowledging"
-          - "following"
-          - "basing"
-          - "considering"
-          - "identifying"
-          - "according"
-          - "noting"
-          - "recalling"
-          - "recognises"
-          - "recognising"
-          - "recognizing"
-        description: "Type of consideration"
-
-      dates:
-        type: array
-        items:
-          $ref: "#/$defs/ComplexDate"
-
-      message:
-        type: string
-        description: "Consideration text."
-
-      subject:
-        type: string
-        description: "Subject of the consideration."
-
-    required:
-    - type
-    - message
+    description: |
+      A formal Resolution. Language-agnostic admin fields live here;
+      every translatable field is wrapped inside `localizations[]`
+      (one entry per available language; at least one is required).
     additionalProperties: false
-
-  Approval:
-    type: object
-    description: "Approval information for a resolution"
+    required: [identifier, localizations]
     properties:
-      type:
-        type: string
-        enum:
-          - "affirmative"
-          - "negative"
-        description: "Type of approval"
-
-      degree:
-        type: string
-        enum:
-          - "unanimous"
-          - "majority"
-          - "minority"
-        description: "Degree of approval"
-
-      message:
-        type: string
-        description: "Approval details"
-
-    additionalProperties: false
-
-  Action:
-    type: object
-    description: "An action taken in a resolution"
-    required:
-      - type
-      - message
-    properties:
-      type:
-        type: string
-        enum:
-          - "accepts"
-          - "acknowledges"
-          - "adoption"
-          - "adopts"
-          - "agrees"
-          - "allocates"
-          - "appoints"
-          - "appreciates"
-          - "appreciation"
-          - "approves"
-          - "asks"
-          - "assigns"
-          - "chairs"
-          - "communicating"
-          - "confirms"
-          - "considers"
-          - "consults"
-          - "creates"
-          - "decides"
-          - "defines"
-          - "delegates"
-          - "delivering"
-          - "directs"
-          - "disbands"
-          - "drafting"
-          - "elects"
-          - "empowers"
-          - "encourages"
-          - "endorses"
-          - "estabilishes"
-          - "establishes"
-          - "gathering"
-          - "identifies"
-          - "instructs"
-          - "investigates"
-          - "nominates"
-          - "notes"
-          - "notifies"
-          - "recognises"
-          - "recognizes"
-          - "reminds"
-          - "recommends"
-          - "registers"
-          - "regrets"
-          - "request"
-          - "replaces"
-          - "requests"
-          - "resolves"
-          - "restates"
-          - "scopes"
-          - "secures"
-          - "sends"
-          - "supports"
-          - "thanks"
-          - "welcomes"
-          - "withdraws"
-        description: "Type of action"
-
-      dates:
-        type: array
-        items:
-          $ref: "#/$defs/ComplexDate"
-        description: "Dates of the action"
-
-      message:
-        type: string
-        description: "Action text."
-
-      subject:
-        type: string
-        description: "Subject of the action."
-
-      degree:
-        type: string
-        description: "Degree of the action"
-        enum:
-          - "unanimous"
-          - "majority"
-          - "minority"
-
-    additionalProperties: false
-
-  MeetingIdentifier:
-    type: object
-    description: "Meeting identification information"
-    properties:
-      venue:
-        type: string
-        description: "Meeting venue"
-
-      dates:
-        type: array
-        description: "Meeting dates"
-        items:
-          $ref: "#/$defs/ComplexDate"
-
       identifier:
-        type: string
-        description: "Meeting identifier"
-
-    additionalProperties: false
-
-  ResolutionRelations:
-    type: object
-    description: "Relation between resolutions"
-    properties:
+        type: array
+        minItems: 1
+        items:
+          $ref: "#/$defs/StructuredIdentifier"
       type:
+        $ref: "#/$defs/ResolutionType"
+      doi:
         type: string
-        enum:
-          - "supersedes"
-          - "amends"
-          - "references"
-          - "replaces"
-          - "updates"
-        description: "Type of relation"
-
-      target:
+      urn:
         type: string
-        description: "Target resolution identifier"
-
-      description:
+      agenda_item:
         type: string
-        description: "Description of the relation"
+      dates:
+        type: array
+        items:
+          $ref: "#/$defs/ResolutionDate"
+      categories:
+        type: array
+        items:
+          type: string
+      meeting:
+        $ref: "#/$defs/MeetingIdentifier"
+      relations:
+        type: array
+        items:
+          $ref: "#/$defs/ResolutionRelation"
+      urls:
+        type: array
+        items:
+          $ref: "#/$defs/Url"
+      localizations:
+        type: array
+        minItems: 1
+        items:
+          $ref: "#/$defs/Localization"
 
-    additionalProperties: false
-
-  StructuredIdentifier:
+  ResolutionMetadata:
     type: object
-    description: "Structured identifier with prefix and number"
-    properties:
-      prefix:
-        type: string
-        description: "Identifier prefix"
-
-      number:
-        oneOf:
-          - type: string
-          - type: integer
-        description: "Identifier number"
-
+    description: "Collection-level metadata (title, meeting date, source, source URLs, host venue)."
     additionalProperties: false
-
-  SubjectBody:
-    type: object
-    description: "Subject body information"
     properties:
-      name:
+      title:
         type: string
-        description: "Name of the subject body"
-
-      address:
+        description: "Default title (no language). For multilingual, use `title_localized[]`."
+      title_localized:
+        type: array
+        items:
+          $ref: "#/$defs/Localization"
+        description: "Per-language title records (parallel pattern to Resolution#localizations)."
+      date:
         type: string
-        description: "Address of the subject body"
+        format: date
+        description: "Meeting date."
+      source:
+        type: string
+        description: "Source organization / secretariat that issued the collection."
+      source_urls:
+        type: array
+        items:
+          $ref: "#/$defs/SourceUrl"
+        description: "Canonical URLs to the source PDFs in each available language."
+      city:
+        type: string
+        description: "IATA city code (3-letter, e.g. BER, CPT, PAR) of the host city."
+      country_code:
+        type: string
+        description: "ISO 3166-1 alpha-2 country code (2-letter, e.g. DE, FR, JP) of the host country."
 
-    additionalProperties: false
+  # ====================================================================
+  # Enums. Each is referenced by its $ref name above. The schema
+  # <-> Ruby enum sync spec asserts each value-list matches the
+  # corresponding Edoxen::Enums::* frozen array.
+  # ====================================================================
 
-additionalProperties: false
+  ActionType:
+    type: string
+    description: "Edoxen::Enums::ACTION_TYPE — LUTAML action.lutaml (deduped)."
+    enum:
+      - adopts
+      - thanks
+      - approves
+      - decides
+      - declares
+      - asks
+      - invites
+      - resolves
+      - confirms
+      - welcomes
+      - recommends
+      - requests
+      - congratulates
+      - instructs
+      - urges
+      - appoints
+      - calls-upon
+      - encourages
+      - affirms
+      - elects
+      - authorizes
+      - charges
+      - states
+      - remarks
+      - judges
+      - sanctions
+      - abrogates
+      - empowers
+
+  ConsiderationType:
+    type: string
+    description: "Edoxen::Enums::CONSIDERATION_TYPE — LUTAML consideration.lutaml (deduped)."
+    enum:
+      - having
+      - noting
+      - recognizing
+      - acknowledging
+      - recalling
+      - reaffirming
+      - considering
+      - taking-into-account
+      - pursuant-to
+      - bearing-in-mind
+      - emphasizing
+      - concerned
+      - accepts
+      - observing
+      - referring
+      - acting
+      - empowers
+
+  ApprovalType:
+    type: string
+    description: "Edoxen::Enums::APPROVAL_TYPE — LUTAML approval_type.lutaml."
+    enum: [affirmative, negative]
+
+  ApprovalDegree:
+    type: string
+    description: "Edoxen::Enums::APPROVAL_DEGREE — LUTAML approval_degree.lutaml."
+    enum: [unanimous, majority, minority]
+
+  ResolutionType:
+    type: string
+    description: "Edoxen::Enums::RESOLUTION_TYPE — LUTAML resolution_type.lutaml."
+    enum: [resolution, recommendation, decision, declaration]
+
+  ResolutionDateType:
+    type: string
+    description: "Edoxen::Enums::RESOLUTION_DATE_TYPE — LUTAML resolution_date_type.lutaml."
+    enum: [adoption, drafted, discussed]
+
+  ResolutionRelationType:
+    type: string
+    description: "Edoxen::Enums::RESOLUTION_RELATION_TYPE — LUTAML resolution_relation_type.lutaml."
+    enum: [annexOf, hasAnnex, updates, refines, replaces, considers]
+
+  UrlKind:
+    type: string
+    description: "Edoxen::Enums::URL_KIND."
+    enum: [access, report]
