@@ -21,46 +21,28 @@ module Edoxen
   # hard-coded path shapes) so adding new collection fields never requires
   # touching this class.
   class SchemaValidator
-    class ValidationError < StandardError
-      attr_reader :file, :line, :column, :pointer, :message_text
-
-      def initialize(file:, line:, column:, pointer:, message_text:)
-        @file = file
-        @line = line
-        @column = column
-        @pointer = pointer
-        @message_text = message_text
-        super(format_line(file, line, column, message_text, pointer))
-      end
-
-      def to_clickable_format
-        format_line(@file, @line, @column, @message_text, @pointer)
-      end
-
-      private
-
-      def format_line(file, line, column, message_text, pointer)
-        suffix = pointer.to_s.empty? ? "" : " at `#{pointer}`"
-        "#{file}:#{line}:#{column}: #{message_text}#{suffix}"
-      end
-    end
+    # Back-compat alias. The canonical type is Edoxen::ValidationError;
+    # this constant lets existing callers keep writing
+    # `SchemaValidator::ValidationError` after the unification.
+    ValidationError = Edoxen::ValidationError
 
     def initialize(schema_path = default_schema_path)
       @schema_path = schema_path
       @schemer = load_schemer(schema_path)
     end
 
-    # Validate a YAML file. Returns an array of ValidationError (empty = ok).
+    # Validate a YAML file. Returns an array of Edoxen::ValidationError
+    # (empty = ok).
     def validate_file(file_path)
       validate_content(File.read(file_path), file_path)
     rescue Errno::ENOENT
       [ValidationError.new(
         file: file_path, line: 1, column: 1,
-        pointer: "", message_text: "File not found"
+        message_text: "File not found", source: Edoxen::ValidationError::SOURCE_SCHEMA
       )]
     end
 
-    # Validate a YAML string. Returns an array of ValidationError.
+    # Validate a YAML string. Returns an array of Edoxen::ValidationError.
     def validate_content(content, file_path)
       data = normalize_dates(YAML.safe_load(content, permitted_classes: [Date, Time]))
       line_map = LineMap.build(content)
@@ -71,13 +53,15 @@ module Edoxen
         line, column = LineMap.locate(pointer, line_map)
         ValidationError.new(
           file: file_path, line: line, column: column,
-          pointer: pointer, message_text: message
+          message_text: message, pointer: pointer,
+          source: Edoxen::ValidationError::SOURCE_SCHEMA
         )
       end
     rescue Psych::SyntaxError => e
       [ValidationError.new(
         file: file_path, line: e.line || 1, column: e.column || 1,
-        pointer: "", message_text: "YAML syntax error: #{e.problem}"
+        message_text: "YAML syntax error: #{e.problem}",
+        source: Edoxen::ValidationError::SOURCE_SYNTAX
       )]
     end
 

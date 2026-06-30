@@ -21,6 +21,7 @@ module Edoxen
   # (Resolution <-> Localization, ResolutionMetadata <-> Localization, etc.).
   autoload :VERSION, "edoxen/version"
   autoload :Error, "edoxen/error"
+  autoload :ValidationError, "edoxen/error"
   autoload :Enums, "edoxen/enums"
 
   # Information-model classes (one per file, one concept per class).
