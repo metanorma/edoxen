@@ -44,8 +44,11 @@ RSpec.describe "Schema <-> Ruby enum sync" do
       defs[name]["type"] == "string" && defs[name]["enum"].is_a?(Array)
     end
     schema_enum_defs.each do |enum_name|
-      expect(SCHEMA_ENUM_BINDINGS).to have_key(enum_name),
-                                        "$defs/#{enum_name} is declared in schema/edoxen.yaml but has no Ruby binding"
+      unless SCHEMA_ENUM_BINDINGS.key?(enum_name)
+        raise "$defs/#{enum_name} is declared in schema/edoxen.yaml but has no Ruby binding"
+      end
+
+      expect(SCHEMA_ENUM_BINDINGS).to have_key(enum_name)
     end
   end
 end
