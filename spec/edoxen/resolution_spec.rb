@@ -3,137 +3,113 @@
 require "spec_helper"
 
 RSpec.describe Edoxen::Resolution do
-  let(:fixture_path) { File.join(__dir__, "..", "fixtures", "isotc154-plenary-38.yaml") }
-  let(:fixture_yaml) { File.read(fixture_path) }
-  let(:resolution_set) { Edoxen::ResolutionSet.from_yaml(fixture_yaml) }
-  let(:sample_resolution) { resolution_set.resolutions.first }
-
-  describe "attributes" do
-    it "has the expected attributes" do
-      resolution = described_class.new
-
-      expect(resolution).to respond_to(:categories)
-      expect(resolution).to respond_to(:dates)
-      expect(resolution).to respond_to(:subject)
-      expect(resolution).to respond_to(:title)
-      expect(resolution).to respond_to(:type)
-      expect(resolution).to respond_to(:identifier)
-      expect(resolution).to respond_to(:considerations)
-      expect(resolution).to respond_to(:approvals)
-      expect(resolution).to respond_to(:actions)
+  describe "language-agnostic admin fields (LUTAML canonical)" do
+    it "carries identifier as a collection of StructuredIdentifier" do
+      payload = {
+        "identifier" => [
+          { "prefix" => "ISO", "number" => "2019-01" },
+          { "prefix" => "TC154", "number" => "WG1" }
+        ],
+        "type" => "decision",
+        "localizations" => [
+          { "language_code" => "eng", "script" => "Latn", "title" => "T" }
+        ]
+      }
+      r = described_class.from_yaml(YAML.dump(payload))
+      expect(r.identifier).to be_an(Array)
+      expect(r.identifier.size).to eq(2)
+      expect(r.identifier.first).to be_a(Edoxen::StructuredIdentifier)
+      expect(r.type).to eq("decision")
     end
-  end
 
-  describe "type validation" do
-    it "accepts valid resolution types" do
-      %w[resolution recommendation decision declaration].each do |type|
-        resolution = described_class.new(type: type)
-        expect(resolution.type).to eq(type)
+    it "carries LUTAML LutaML ResolutionType values" do
+      Edoxen::Enums::RESOLUTION_TYPE.each do |rt|
+        r = described_class.new(type: rt, identifier: [Edoxen::StructuredIdentifier.new(prefix: "X", number: "1")])
+        expect(r.type).to eq(rt)
       end
     end
 
-    it "accepts any string as resolution type" do
-      resolution = described_class.new(type: "custom_type")
-      expect(resolution.type).to eq("custom_type")
+    it "carries doi, urn, agenda_item, dates, categories, meeting, relations, urls" do
+      payload = {
+        "identifier" => [{ "prefix" => "X", "number" => "1" }],
+        "doi" => "10.1234/abc",
+        "urn" => "urn:x:y",
+        "agenda_item" => "11.2",
+        "dates" => [{ "date" => "2024-01-15", "type" => "adoption" }],
+        "categories" => ["WG 1"],
+        "meeting" => { "venue" => "Online", "date" => "2024-01-15" },
+        "relations" => [
+          {
+            "source" => { "prefix" => "X", "number" => "1" },
+            "destination" => { "prefix" => "X", "number" => "2" },
+            "type" => "updates"
+          }
+        ],
+        "urls" => [{ "kind" => "access", "ref" => "https://example.com", "format" => "html" }],
+        "localizations" => [
+          { "language_code" => "eng", "script" => "Latn", "title" => "T" }
+        ]
+      }
+      r = described_class.from_yaml(YAML.dump(payload))
+      expect(r.doi).to eq("10.1234/abc")
+      expect(r.urn).to eq("urn:x:y")
+      expect(r.agenda_item).to eq("11.2")
+      expect(r.dates.first).to be_a(Edoxen::ResolutionDate)
+      expect(r.categories).to eq(["WG 1"])
+      expect(r.meeting).to be_a(Edoxen::MeetingIdentifier)
+      expect(r.relations.first).to be_a(Edoxen::ResolutionRelation)
+      expect(r.urls.first).to be_a(Edoxen::Url)
     end
   end
 
-  describe "collections" do
-    it "handles considerations as a collection" do
-      expect(sample_resolution.considerations).to be_an(Array)
-      expect(sample_resolution.considerations.first).to be_a(Edoxen::Consideration)
-      expect(sample_resolution.considerations.length).to eq(3)
+  describe "translatable fields live ONLY inside localizations[]" do
+    it "no longer has flat #title / #subject / #considerations / #approvals / #actions" do
+      expect(described_class.new).not_to respond_to(:title)
+      expect(described_class.new).not_to respond_to(:subject)
+      expect(described_class.new).not_to respond_to(:message)
+      expect(described_class.new).not_to respond_to(:considering)
+      expect(described_class.new).not_to respond_to(:considerations)
+      expect(described_class.new).not_to respond_to(:approvals)
+      expect(described_class.new).not_to respond_to(:actions)
     end
 
-    it "handles approvals as a collection" do
-      expect(sample_resolution.approvals).to be_an(Array)
-      expect(sample_resolution.approvals.first).to be_a(Edoxen::Approval)
-      expect(sample_resolution.approvals.first.type).to eq("affirmative")
-    end
-
-    it "handles actions as a collection" do
-      expect(sample_resolution.actions).to be_an(Array)
-      expect(sample_resolution.actions.first).to be_a(Edoxen::Action)
-      expect(sample_resolution.actions.first.type).to eq("resolves")
-    end
-
-    it "handles dates as a collection" do
-      expect(sample_resolution.dates).to be_an(Array)
-      expect(sample_resolution.dates.first).to be_a(Edoxen::ResolutionDate)
-      expect(sample_resolution.dates.first.kind).to eq("decision")
-    end
-  end
-
-  describe "YAML serialization" do
-    it "serializes to YAML correctly" do
-      yaml_output = sample_resolution.to_yaml
-
-      expect(yaml_output).to include("categories:")
-      expect(yaml_output).to include("- Resolutions related to JWG 1")
-      expect(yaml_output).to include("title: 'Adoption of NWIP ballot for ISO/PWI 9735-11")
-      expect(yaml_output).to include("identifier: 2019-01")
-    end
-
-    it "deserializes from YAML correctly" do
-      yaml_output = sample_resolution.to_yaml
-      parsed_resolution = described_class.from_yaml(yaml_output)
-
-      expect(parsed_resolution.title).to eq(sample_resolution.title)
-      expect(parsed_resolution.categories).to eq(sample_resolution.categories)
-      expect(parsed_resolution.identifier).to eq(sample_resolution.identifier)
-    end
-
-    it "handles round-trip serialization" do
-      yaml_output = sample_resolution.to_yaml
-      parsed_resolution = described_class.from_yaml(yaml_output)
-      second_yaml = parsed_resolution.to_yaml
-
-      expect(yaml_output).to eq(second_yaml)
+    it "exposes those fields via Localization" do
+      payload = {
+        "identifier" => [{ "prefix" => "X", "number" => "1" }],
+        "type" => "decision",
+        "localizations" => [
+          {
+            "language_code" => "eng", "script" => "Latn",
+            "title" => "Title", "subject" => "Subject",
+            "considerations" => [],
+            "approvals" => [],
+            "actions" => [
+              {
+                "type" => "approves",
+                "date_effective" => { "date" => "2024-01-15", "type" => "adoption" },
+                "message" => "approves"
+              }
+            ]
+          }
+        ]
+      }
+      r = described_class.from_yaml(YAML.dump(payload))
+      eng = r.localizations.first
+      expect(eng.title).to eq("Title")
+      expect(eng.subject).to eq("Subject")
+      expect(eng.actions.first).to be_a(Edoxen::Action)
     end
   end
 
-  describe "JSON serialization" do
-    it "serializes to JSON correctly" do
-      json_output = sample_resolution.to_json
-
-      expect(json_output).to include('"title":"Adoption of NWIP ballot for ISO/PWI 9735-11')
-      expect(json_output).to include('"categories":["Resolutions related to JWG 1"]')
-    end
-
-    it "deserializes from JSON correctly" do
-      json_output = sample_resolution.to_json
-      parsed_resolution = described_class.from_json(json_output)
-
-      expect(parsed_resolution.title).to eq(sample_resolution.title)
-      expect(parsed_resolution.categories).to eq(sample_resolution.categories)
-    end
-  end
-
-  describe "real-world data compatibility" do
-    it "loads real-world YAML data correctly" do
-      expect(sample_resolution.categories).to eq(["Resolutions related to JWG 1"])
-      expect(sample_resolution.title).to include("Adoption of NWIP ballot")
-      expect(sample_resolution.identifier).to eq("2019-01")
-      expect(sample_resolution.considerations.length).to eq(3)
-      expect(sample_resolution.approvals.length).to eq(1)
-      expect(sample_resolution.actions.length).to eq(1)
-    end
-
-    it "handles different resolution types from fixture" do
-      business_plan_resolution = resolution_set.resolutions.find { |r| r.identifier == "2019-20" }
-
-      expect(business_plan_resolution.categories).to eq(["General Resolutions"])
-      expect(business_plan_resolution.title).to eq("Approval of the Business Plan")
-      expect(business_plan_resolution.actions.first.type).to eq("approves")
-    end
-
-    it "handles thanks resolutions" do
-      thanks_resolution = resolution_set.resolutions.find { |r| r.identifier == "2019-22" }
-
-      expect(thanks_resolution.categories).to eq(["General Resolutions"])
-      expect(thanks_resolution.title).to eq("Appreciation of the meeting host and all participants")
-      expect(thanks_resolution.actions.first.type).to eq("thanks")
-      expect(thanks_resolution.actions.length).to eq(2)
+  describe "real-world fixtures round-trip" do
+    Dir.glob(File.expand_path("../fixtures/*.yaml", __dir__)).each do |fixture|
+      it "round-trips #{File.basename(fixture)}" do
+        collection = Edoxen::ResolutionCollection.from_yaml(File.read(fixture))
+        reloaded = Edoxen::ResolutionCollection.from_yaml(collection.to_yaml)
+        expect(reloaded.resolutions.size).to eq(collection.resolutions.size)
+        expect(reloaded.resolutions.first.identifier).to eq(collection.resolutions.first.identifier)
+        expect(reloaded.resolutions.first.localizations).to eq(collection.resolutions.first.localizations)
+      end
     end
   end
 end
