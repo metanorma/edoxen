@@ -54,6 +54,8 @@ module Edoxen
   autoload :Agenda, "edoxen/agenda"
   autoload :Attendance, "edoxen/attendance"
   autoload :VoteRecord, "edoxen/vote_record"
+  autoload :MinutesSection, "edoxen/minutes_section"
+  autoload :Minutes, "edoxen/minutes"
   autoload :MeetingRelation, "edoxen/meeting_relation"
   autoload :MeetingLocalization, "edoxen/meeting_localization"
   autoload :Meeting, "edoxen/meeting"

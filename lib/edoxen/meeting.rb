@@ -44,6 +44,7 @@ module Edoxen
 
     attribute :attendance, Attendance, collection: true
     attribute :vote_records, VoteRecord, collection: true
+    attribute :minutes, Minutes, collection: true
 
     attribute :localizations, MeetingLocalization, collection: true
     attribute :relations, MeetingRelation, collection: true
