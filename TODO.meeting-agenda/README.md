@@ -25,6 +25,6 @@ work only.
 
 ## Branches
 
-- `metanorma/edoxen-model` ← `feat/meeting-agenda-model` (Phase 2)
-- `metanorma/edoxen` ← `feat/meeting-agenda-model` (Phases 3–8)
+- `edoxen/edoxen-model` ← `feat/meeting-agenda-model` (Phase 2)
+- `edoxen/edoxen` ← `feat/meeting-agenda-model` (Phases 3–8)
 - Phase 9 merges both, then releases `edoxen` as a minor bump.

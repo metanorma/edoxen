@@ -1,12 +1,12 @@
 ---
 $schema: "http://json-schema.org/draft-07/schema#"
-$id: "https://github.com/metanorma/edoxen/schema/edoxen.yaml"
+$id: "https://github.com/edoxen/edoxen/schema/edoxen.yaml"
 title: "Edoxen Resolution Collection Schema"
 description: |
   Schema for validating Edoxen ResolutionCollection YAML files.
 
   Mirrors the canonical LutaML information model in
-  https://github.com/metanorma/edoxen-model/tree/main/models .
+  https://github.com/edoxen/edoxen-model/tree/main/models .
 
   The enum constants declared under `$defs` (ActionType,
   ConsiderationType, ApprovalType, ApprovalDegree, ResolutionType,

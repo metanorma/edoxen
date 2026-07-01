@@ -1,8 +1,8 @@
 = Edoxen
 
-https://github.com/metanorma/edoxen[image:https://img.shields.io/github/stars/metanorma/edoxen.svg?style=social[GitHub Stars]]
-image:https://img.shields.io/github/license/metanorma/edoxen.svg[License]
-image:https://img.shields.io/github/actions/workflow/status/metanorma/edoxen/test.yml?branch=main[Build Status]
+https://github.com/edoxen/edoxen[image:https://img.shields.io/github/stars/edoxen/edoxen.svg?style=social[GitHub Stars]]
+image:https://img.shields.io/github/license/edoxen/edoxen.svg[License]
+image:https://img.shields.io/github/actions/workflow/status/edoxen/edoxen/test.yml?branch=main[Build Status]
 image:https://img.shields.io/gem/v/edoxen.svg[RubyGems Version]
 
 == Purpose
@@ -12,7 +12,7 @@ formal resolutions and decisions. It is built on top of the
 https://github.com/lutaml/lutaml[ lutaml-model] serialization framework.
 
 The information model is defined in
-https://github.com/metanorma/edoxen-model/tree/main/models[ LutaML UML
+https://github.com/edoxen/edoxen-model/tree/main/models[ LutaML UML
 files] (one `.lutaml` per concept). This gem mirrors that model exactly —
 attribute declarations, enum values, and field shapes — so that anything
 you can express in LutaML you can also construct, serialize, and validate

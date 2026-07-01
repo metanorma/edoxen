@@ -11,8 +11,8 @@ Land everything via PRs. Verify GHA passes. Merge. Bump edoxen minor
 
 | Repo | Branch | PRs against |
 |---|---|---|
-| `metanorma/edoxen-model` | `feat/meeting-agenda-model` | main |
-| `metanorma/edoxen` | `feat/meeting-agenda-model` | main |
+| `edoxen/edoxen-model` | `feat/meeting-agenda-model` | main |
+| `edoxen/edoxen` | `feat/meeting-agenda-model` | main |
 
 Order: edoxen-model first (canonical), then edoxen (mirror).
 
@@ -31,7 +31,7 @@ Per branch, before pushing:
 ## Post-merge
 
 - [ ] Trigger `gh workflow run release.yml --ref main -f next_version=minor`
-      on `metanorma/edoxen`.
+      on `edoxen/edoxen`.
 - [ ] Confirm new version appears on rubygems.org.
 - [ ] Confirm tag `vX.Y.Z` pushed.
 

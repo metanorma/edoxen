@@ -58,4 +58,4 @@ LUTAML notation, wire names are snake_case per D7.)
 - [ ] `README.adoc` updated: new "Meeting model" section, file index
       extended.
 - [ ] Old `meeting-model.adoc` renamed to `.deprecated`.
-- [ ] Commit + PR to `metanorma/edoxen-model`.
+- [ ] Commit + PR to `edoxen/edoxen-model`.

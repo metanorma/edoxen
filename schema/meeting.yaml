@@ -1,12 +1,12 @@
 ---
 $schema: "http://json-schema.org/draft-07/schema#"
-$id: "https://github.com/metanorma/edoxen/schema/meeting.yaml"
+$id: "https://github.com/edoxen/edoxen/schema/meeting.yaml"
 title: "Edoxen Meeting Schema"
 description: |
   Schema for validating Edoxen Meeting/Agenda YAML files.
 
   Mirrors the canonical LutaML information model in
-  https://github.com/metanorma/edoxen-model/tree/main/models (meeting*.lutaml,
+  https://github.com/edoxen/edoxen-model/tree/main/models (meeting*.lutaml,
   agenda*.lutaml, etc.).
 
   The root accepts either a single Meeting or a MeetingCollection.

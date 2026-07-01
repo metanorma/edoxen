@@ -1,6 +1,6 @@
 ---
 # CIML 56th meeting (OIML) — bilingual EN/FR, links to a ResolutionCollection.
-# Mirrors the canonical shape in metanorma/edoxen-model README.
+# Mirrors the canonical shape in edoxen/edoxen-model README.
 identifier:
   - prefix: CIML
     number: "56"
