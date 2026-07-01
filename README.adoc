@@ -41,16 +41,23 @@ yaml = File.read('resolutions.yaml')
 collection = Edoxen::ResolutionCollection.from_yaml(yaml)
 
 collection.resolutions.each do |resolution|
-  prefix = resolution.identifier.first.prefix
-  number = resolution.identifier.first.number
-  puts "#{prefix}/#{number}"
+  # identifier is StructuredIdentifier[1..*] — a Resolution can carry
+  # its TC number, SC number, and any cross-cutting reference number.
+  id = resolution.identifier.first
+  puts "#{id.prefix}/#{id.number}"
 
-  resolution.localizations.each do |loc|
-    puts "  [#{loc.language_code}/#{loc.script}] #{loc.title}"
-    loc.actions.each do |action|
-      puts "    - #{action.type}: #{action.message}"
-    end
+  # Canonical rendering — English when available, else the first
+  # declared localization. See "Lookup accessors" below.
+  loc = resolution.primary_localization
+  puts "  [#{loc.language_code}/#{loc.script}] #{loc.title}"
+
+  loc.actions.each do |action|
+    puts "    - #{action.type}: #{action.message}"
   end
+
+  # Or look up a specific language explicitly:
+  fra = resolution.in_language("fra")
+  puts "  FR: #{fra.title}" if fra
 end
 
 # Round-trip back to YAML
@@ -94,6 +101,25 @@ Every translatable field on a Resolution is wrapped inside one of its
 `localizations[]` entries. Language-agnostic admin fields
 (`identifier`, `doi`, `urn`, `agenda_item`, `dates`, `categories`,
 `meeting`, `relations`, `urls`) live on the parent `Resolution`.
+
+=== Lookup accessors
+
+Direct iteration over `localizations[]` is discouraged — the
+language-preference policy lives behind two accessors:
+
+* `Resolution#in_language(code, fallback: false)` — exact match by
+  ISO 639-3 code, or `nil` (or the first declared localization when
+  `fallback: true`).
+* `Resolution#primary_localization` — English when available, else
+  the first declared localization. Mirrors the glossarist
+  LocalizedConcept "preferred language" notion.
+
+[source,ruby]
+----
+resolution.in_language("fra")           # => Localization or nil
+resolution.in_language("deu", fallback: true)
+resolution.primary_localization         # English-or-first
+----
 
 == Multilingual resolution sets
 
@@ -169,21 +195,45 @@ or `--inplace` is required (mutually exclusive).
 
 * `lib/edoxen.rb` is the single entry-point. It configures
   `Lutaml::Model::Config` and `autoload`s every model class and service.
-* Each model lives in its own file under `lib/edoxen/`. No `require_relative`
-  — all cross-references resolve through Ruby autoload.
+  No `require_relative` in library code — cross-references resolve
+  through Ruby autoload.
+* Each model lives in its own file under `lib/edoxen/`. Models declare
+  `attribute` only — `lutaml-model` auto-emits an identity map (wire
+  name = snake_case attribute name) when no explicit `key_value` block
+  is present. Add a `key_value do; map "wire", to: :attr; end` block
+  only when the wire name differs from the attribute name.
 * `lib/edoxen/enums.rb` is the single source of truth for every enum
   value used by the gem. Both the Ruby model (`attribute :type, :string,
-  values: Enums::ACTION_TYPE`) and `schema/edoxen.yaml` refer to the
-  same constant; `spec/edoxen/schema_enum_sync_spec.rb` asserts equality
-  at runtime.
-* `lib/edoxen/schema_validator.rb` is intentionally small: a
-  `SchemaValidator::ValidationError`, a `validate_file` method, a
-  `validate_content` method, and a `LineMap` module for line-accurate
-  error reporting. Adding new collection paths never requires touching
-  it — the lookup is longest-prefix match against an indent-heuristic
-  line map.
-* `lib/edoxen/cli.rb` is the Thor surface that glues SchemaValidator and
-  `ResolutionCollection.from_yaml` together for the two CLI commands.
+  values: Enums::ACTION_TYPE`) and `schema/edoxen.yaml` reference the
+  same constants.
+* `lib/edoxen/error.rb` defines the unified `Edoxen::ValidationError`
+  — produced by both `SchemaValidator` (with `source: :schema` or
+  `:syntax`) and by `ResolutionCollection.from_yaml` rescues in the
+  CLI (with `source: :model`). Carries `file`, `line`, `column`,
+  `pointer`, `message_text`, and `source`. The legacy
+  `SchemaValidator::ValidationError` constant is an alias.
+* `lib/edoxen/schema_validator.rb` is intentionally small: two
+  validate methods, a `LineMap` module for line-accurate error
+  reporting (longest-prefix match — no path-shape hardcoding), and
+  date coercion so `json_schemer` can validate `format: date` against
+  YAML-loaded `Date` instances.
+* `lib/edoxen/cli.rb` exposes two Thor commands (`validate`,
+  `normalize`) that delegate their shared scaffolding
+  (expand/sort/empty/header/loop/tally/summary/exit) to the deep
+  `Edoxen::Cli::Batch` module. Adding a third command is a per-file
+  block returning `Batch::Result.ok(msg)` or `Batch::Result.bad(errors)`.
+
+=== Schema ↔ Ruby invariants
+
+Two runtime specs guard the schema ↔ Ruby boundary:
+
+* `spec/edoxen/schema_enum_sync_spec.rb` — every `$defs/<EnumName>.enum`
+  array equals its `Edoxen::Enums::*` frozen counterpart.
+* `spec/edoxen/schema_model_sync_spec.rb` — every Ruby model attribute
+  has a matching `$defs/<ClassName>` property (and vice versa), with
+  matching collection flag.
+
+Drift fails CI immediately, not at fixture-validation time.
 
 == Contributing
 
@@ -192,10 +242,16 @@ Follow the rules in `CLAUDE.md`:
 * All public methods have specs.
 * Specs use real model instances — never `double()`.
 * Serialization goes through `lutaml-model` only — no hand-rolled
-  `to_h`, `from_h`, `to_yaml`, or `to_json` on a model class.
-* Schema and Ruby enum values must agree; the schema_sync_spec catches
-  drift.
-* All changes go through PRs. Never commit to `main`, never push tags.
+  `to_h`, `from_h`, `to_yaml`, or `to_json` on a model class. Declare
+  `attribute`; the wire map is auto-emitted.
+* Schema and Ruby must agree on enum values *and* on property shape.
+  Both `schema_enum_sync_spec` and `schema_model_sync_spec` catch
+  drift at CI time.
+* Library code uses autoload (declared in `lib/edoxen.rb`), never
+  `require_relative`. No `send` to private methods, no
+  `instance_variable_set`/`get`, no `respond_to?` for type checks.
+* All changes go through PRs. Never commit to `main`, never push tags,
+  never add AI attribution to commits.
 
 == License
 
