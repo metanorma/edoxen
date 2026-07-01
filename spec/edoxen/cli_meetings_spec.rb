@@ -35,9 +35,9 @@ RSpec.describe "edoxen CLI meeting subcommands" do
       pattern = File.join(meetings_dir, "*.yaml")
       stdout, _stderr, status = run_cli("validate-meetings", pattern)
       expect(status.exitstatus).to eq(0)
-      # At least one VALID line per fixture; tolerate minor formatting
-      # variance across platforms.
-      expect(stdout.scan("✅").size).to be >= 1
+      # Assert on ASCII summary text — Windows console output may
+      # mangle the ✅/📊 emoji bytes when captured via Open3.
+      expect(stdout).to include("Success rate: 100.0%")
     end
 
     it "exits non-zero on a glob that matches no file" do
