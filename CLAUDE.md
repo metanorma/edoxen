@@ -4,15 +4,19 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this gem is
 
-`edoxen` is an information model for formal resolutions and decisions
-(ISO/TC 154, CIPM, OIML, etc.). It provides:
+`edoxen` is an information model for formal proceedings — meetings,
+agendas, minutes, attendance, votes, and the resolutions adopted by
+standards bodies (ISO/TC 154, CIPM, OIML, etc.). It provides:
 
 - A set of `Lutaml::Model::Serializable` subclasses that mirror the canonical
   LutaML UML model in `../edoxen-model/models/*.lutaml`.
-- A JSON-Schema (`schema/edoxen.yaml`) used to validate real-world YAML
-  files via `SchemaValidator` (`json_schemer`).
-- A Thor CLI (`edoxen validate`, `edoxen normalize`) that wraps both the
-  schema validator and the Ruby model parser.
+- Two JSON-Schemas — `schema/edoxen.yaml` for `ResolutionCollection`
+  and `schema/meeting.yaml` for `Meeting` / `MeetingCollection` — used
+  to validate real-world YAML files via `SchemaValidator`
+  (`json_schemer`).
+- A Thor CLI that wraps both schemas and both model parsers:
+  `edoxen validate` / `edoxen normalize` for resolutions;
+  `edoxen validate-meetings` / `edoxen normalize-meetings` for meetings.
 
 ## Architecture
 

@@ -8,7 +8,9 @@ image:https://img.shields.io/gem/v/edoxen.svg[RubyGems Version]
 == Purpose
 
 Edoxen is a Ruby library for the canonical Edoxen information model of
-formal resolutions and decisions. It is built on top of the
+formal proceedings — meetings, agendas, minutes, attendance, votes,
+and the resolutions adopted by standards bodies and governance
+organisations. It is built on top of the
 https://github.com/lutaml/lutaml[ lutaml-model] serialization framework.
 
 The information model is defined in
@@ -19,8 +21,10 @@ you can express in LutaML you can also construct, serialize, and validate
 in Ruby.
 
 The intended users are standards organizations and governance bodies that
-need to publish structured records of formal decision-making. Real-world
-samples (ISO/TC 154, CIPM, OIML CIML) ship in `spec/fixtures/`.
+need to publish structured records of formal proceedings — the full
+lifecycle from draft agenda through adopted resolution, in any ISO 639-3
+language. Real-world samples (ISO/TC 154, CIPM, OIML CIML) ship in
+`spec/fixtures/`.
 
 == Installation
 
