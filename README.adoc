@@ -228,7 +228,7 @@ MeetingCollection
               ├── date_range: DateRange {start, end}
               ├── committee, committee_group
               ├── venues: Location[]   (multi-venue supported)
-              ├── general_area, city (IATA), country_code (ISO 3166-1), virtual
+              ├── general_area, city (UN/LOCODE, e.g. FRPAR), country_code (ISO 3166-1), virtual
               ├── chair, secretary: Person
               ├── host, hosts: HostRef[]   (typed: national_body/liaison/associate/organizer)
               ├── source_urls: SourceUrl[]   (with `kind` discriminator)

@@ -344,7 +344,10 @@ $defs:
         items:
           $ref: "#/$defs/Location"
       general_area:    { type: string }
-      city:            { type: string }
+      city:
+        type: string
+        pattern: "^[A-Z]{2}[A-Z0-9]{3}$"
+        description: "UN/LOCODE of the host city (5-char: 2-letter ISO 3166-1 country + 3-char location, e.g. FRPAR, HKHKG, THCNM)."
       country_code:
         type: string
         pattern: "^[A-Z]{2}$"

@@ -289,7 +289,8 @@ $defs:
         description: "Canonical URLs to the source PDFs in each available language."
       city:
         type: string
-        description: "IATA city code (3-letter, e.g. BER, CPT, PAR) of the host city."
+        pattern: "^[A-Z]{2}[A-Z0-9]{3}$"
+        description: "UN/LOCODE of the host city (5-char: 2-letter ISO 3166-1 country + 3-char location, e.g. FRPAR, CNSHA, HKHKG). Supersedes the IATA city code."
       country_code:
         type: string
         description: "ISO 3166-1 alpha-2 country code (2-letter, e.g. DE, FR, JP) of the host country."
