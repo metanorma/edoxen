@@ -63,5 +63,12 @@ module Edoxen
     SOURCE_URL_KIND = %w[
       agenda_pdf minutes_pdf resolutions_pdf report_pdf register_url landing_page
     ].freeze
+
+    # P2.6 / P2.7 — Attendance and Vote records.
+    PARTICIPATION_STATUS = %w[present absent apologies observer excused].freeze
+
+    VOTE_TYPE = %w[
+      affirmative negative abstain absent not_applicable
+    ].freeze
   end
 end

@@ -104,6 +104,21 @@ $defs:
       contact:
         $ref: "#/$defs/Person"
 
+  ScheduleItemLocalization:
+    type: object
+    description: "Per-language content for a ScheduleItem."
+    additionalProperties: false
+    required: [language_code]
+    properties:
+      language_code:
+        type: string
+        pattern: "^[a-z]{3}$"
+      script:
+        type: string
+        pattern: "^[A-Z][a-z]{3}$"
+      event:       { type: string }
+      description: { type: string }
+
   ScheduleItem:
     type: object
     description: "One entry in the meeting timetable."
@@ -116,6 +131,39 @@ $defs:
       event:       { type: string }
       description: { type: string }
       room:        { type: string }
+      localizations:
+        type: array
+        items:
+          $ref: "#/$defs/ScheduleItemLocalization"
+
+  Attendance:
+    type: object
+    description: "One attendance record per person at a Meeting."
+    additionalProperties: false
+    required: [person, status]
+    properties:
+      person:
+        $ref: "#/$defs/Person"
+      status:
+        $ref: "#/$defs/ParticipationStatus"
+      affiliation: { type: string }
+      proxy_for:
+        $ref: "#/$defs/Person"
+      notes: { type: string }
+
+  VoteRecord:
+    type: object
+    description: "One vote by one person on one resolution at one meeting."
+    additionalProperties: false
+    required: [resolution_ref, person, vote]
+    properties:
+      resolution_ref: { type: string }
+      person:
+        $ref: "#/$defs/Person"
+      affiliation: { type: string }
+      vote:
+        $ref: "#/$defs/VoteType"
+      notes: { type: string }
 
   Deadline:
     type: object
@@ -278,6 +326,14 @@ $defs:
         type: array
         items:
           $ref: "#/$defs/Deadline"
+      attendance:
+        type: array
+        items:
+          $ref: "#/$defs/Attendance"
+      vote_records:
+        type: array
+        items:
+          $ref: "#/$defs/VoteRecord"
 
       localizations:
         type: array
@@ -356,3 +412,13 @@ $defs:
     type: string
     description: "Edoxen::Enums::SOURCE_URL_KIND."
     enum: [agenda_pdf, minutes_pdf, resolutions_pdf, report_pdf, register_url, landing_page]
+
+  ParticipationStatus:
+    type: string
+    description: "Edoxen::Enums::PARTICIPATION_STATUS."
+    enum: [present, absent, apologies, observer, excused]
+
+  VoteType:
+    type: string
+    description: "Edoxen::Enums::VOTE_TYPE."
+    enum: [affirmative, negative, abstain, absent, not_applicable]

@@ -42,6 +42,9 @@ module Edoxen
     attribute :schedule, ScheduleItem, collection: true
     attribute :deadlines, Deadline, collection: true
 
+    attribute :attendance, Attendance, collection: true
+    attribute :vote_records, VoteRecord, collection: true
+
     attribute :localizations, MeetingLocalization, collection: true
     attribute :relations, MeetingRelation, collection: true
     attribute :resolution_refs, :string, collection: true
