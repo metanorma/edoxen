@@ -66,9 +66,9 @@ RSpec.describe Edoxen::ReferenceData do
   end
 
   describe ".find_unlocode" do
-    it "returns an Unlocode::Entry for a known code" do
+    it "returns an Unlocodes::Entry for a known code" do
       entry = described_class.find_unlocode("FRPAR")
-      expect(entry).to be_a(Unlocode::Entry)
+      expect(entry).to be_a(Unlocodes::Entry)
       expect(entry.code).to eq("FRPAR")
       expect(entry.country).to eq("FR")
     end

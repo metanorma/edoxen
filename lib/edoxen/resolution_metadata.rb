@@ -20,7 +20,7 @@ module Edoxen
     attribute :meeting_urn, :string
 
     # Resolve the collection's host-city UN/LOCODE via the canonical
-    # `unlocode` gem registry. Returns an `Unlocode::Entry` or nil.
+    # `unlocode` gem registry. Returns an `Unlocodes::Entry` or nil.
     def city_entry
       return nil if city.nil? || city.to_s.empty?
 
