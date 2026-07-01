@@ -34,9 +34,7 @@ RSpec.describe "edoxen CLI meeting subcommands" do
       # On Windows, Open3 + bundle + glob args interact poorly; if the
       # invocation produces no output we treat it as a Windows-specific
       # harness quirk and skip rather than fail.
-      if stdout.empty? && stderr.empty?
-        skip "Windows + Open3 + bundle produced no output for glob arg"
-      end
+      skip "Windows + Open3 + bundle produced no output for glob arg" if stdout.empty? && stderr.empty?
       expect(status.exitstatus).to eq(0)
       expect(stdout).to include("Success rate: 100.0%")
     end
