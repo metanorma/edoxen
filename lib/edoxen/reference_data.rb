@@ -24,9 +24,9 @@ module Edoxen
   module ReferenceData
     # Hard require the unlocode gem. It's a declared runtime dep, so a
     # clean install of edoxen brings it in. The bundled dataset ships
-    # 4 sample entries; full coverage requires `rake unlocode:fetch`
+    # 4 sample entries; full coverage requires `rake unlocodes:fetch`
     # from the unlocode gem.
-    require "unlocode"
+    require "unlocodes"
 
     # ISO 3166-1 alpha-2 — countries ISO/TC 154 / OIML / BIPM operate in.
     # Two-letter uppercase.
@@ -68,19 +68,19 @@ module Edoxen
 
     class << self
       # Look up a UN/LOCODE entry via the canonical `unlocode` gem.
-      # Returns an `Unlocode::Entry` (with `#name`, `#country`,
+      # Returns an `Unlocodes::Entry` (with `#name`, `#country`,
       # `#coordinates`, `#iata`, `#functions`, etc.) or nil when the
       # code is not in the registry.
       #
       # Requires the full UN/LOCODE dataset to be loaded. The gem
-      # ships a 4-entry sample by default; run `rake unlocode:fetch`
+      # ships a 4-entry sample by default; run `rake unlocodes:fetch`
       # from the unlocode gem to populate the full ~100k-entry
       # registry.
       #
       # @param code [String, #to_s] 5-character UN/LOCODE
-      # @return [Unlocode::Entry, nil]
+      # @return [Unlocodes::Entry, nil]
       def find_unlocode(code)
-        Unlocode.find(code.to_s.upcase)
+        Unlocodes.find(code.to_s.upcase)
       end
 
       # True when the code resolves to a real UN/LOCODE entry via the

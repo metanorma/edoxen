@@ -7,7 +7,7 @@ gemspec
 
 # Pre-release sources. Move to RubyGems once published; the gemspec
 # dep stays as `add_dependency "unlocode", "~> 0.1"` either way.
-gem "unlocode", github: "metanorma/unlocode"
+gem "unlocodes", github: "metanorma/unlocode"
 
 gem "rake"
 gem "rspec"
