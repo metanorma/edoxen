@@ -12,5 +12,11 @@ module Edoxen
     attribute :source_urls, SourceUrl, collection: true
     attribute :city, :string
     attribute :country_code, :string
+
+    # URN back-reference to the Meeting that produced this collection.
+    # Join key for the Meeting ↔ ResolutionCollection link. Optional —
+    # collections without a parent meeting (e.g., ad-hoc resolution
+    # sets) simply omit it.
+    attribute :meeting_urn, :string
   end
 end

@@ -207,6 +207,10 @@ $defs:
       language_code:
         type: string
         pattern: "^[a-z]{3}$"
+      kind:
+        type: string
+        description: "Optional discriminator (agenda_pdf, minutes_pdf, ...)."
+        enum: [agenda_pdf, minutes_pdf, resolutions_pdf, report_pdf, register_url, landing_page]
 
   # ====================================================================
   # Top-level structures.
@@ -289,6 +293,9 @@ $defs:
       country_code:
         type: string
         description: "ISO 3166-1 alpha-2 country code (2-letter, e.g. DE, FR, JP) of the host country."
+      meeting_urn:
+        type: string
+        description: "URN back-reference to the Meeting that produced this collection."
 
   # ====================================================================
   # Enums. Each is referenced by its $ref name above. The schema
