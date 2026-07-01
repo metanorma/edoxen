@@ -165,6 +165,55 @@ $defs:
         $ref: "#/$defs/VoteType"
       notes: { type: string }
 
+  MinutesSection:
+    type: object
+    description: |
+      One section of a Meeting's minutes — typically tied to an agenda
+      item by its `number` field. Carries the narrative as Markdown
+      (the format the GLM-OCR pipeline emits) plus an optional page
+      range for provenance back to the source PDF.
+    additionalProperties: false
+    properties:
+      number:      { type: string }
+      title:       { type: string }
+      narrative:   { type: string }
+      page_start:  { type: integer }
+      page_end:    { type: integer }
+      references:
+        type: array
+        items:
+          $ref: "#/$defs/Reference"
+
+  Minutes:
+    type: object
+    description: |
+      The narrative record of a Meeting — what was said, by whom, in
+      what order, with what outcome. Distinct from Agenda (the business
+      order drafted before the meeting) and from ResolutionCollection
+      (the formal decisions adopted). The Minutes are the running
+      record. One Minutes document per language; sections are typically
+      keyed by agenda-item number so consumers can join
+      Minutes ↔ AgendaItem ↔ Resolution.
+    additionalProperties: false
+    properties:
+      identifier:
+        type: array
+        items:
+          $ref: "#/$defs/StructuredIdentifier"
+      urn:           { type: string }
+      language_code:
+        type: string
+        pattern: "^[a-z]{3}$"
+      script:
+        type: string
+        pattern: "^[A-Z][a-z]{3}$"
+      source_doc:    { type: string }
+      source_pages:  { type: string }
+      sections:
+        type: array
+        items:
+          $ref: "#/$defs/MinutesSection"
+
   Deadline:
     type: object
     description: "A time-bound requirement (registration, submission, etc.)."
@@ -334,6 +383,10 @@ $defs:
         type: array
         items:
           $ref: "#/$defs/VoteRecord"
+      minutes:
+        type: array
+        items:
+          $ref: "#/$defs/Minutes"
 
       localizations:
         type: array
