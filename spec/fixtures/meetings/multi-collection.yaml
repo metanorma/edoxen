@@ -1,0 +1,33 @@
+---
+# MeetingCollection wrapping two meetings — exercises the wrapper type
+# and the find_by_urn / find_by_identifier helpers.
+metadata:
+  title: Sample meeting collection
+  source: Test fixture
+meetings:
+  - identifier:
+      - prefix: CIML
+        number: "55"
+    urn: urn:oiml:ciml:meeting:ciml-55
+    type: plenary
+    year: 2020
+    date_range:
+      start: 2020-10-19
+      end: 2020-10-23
+    localizations:
+      - language_code: eng
+        script: Latn
+        title: 55th CIML Meeting
+  - identifier:
+      - prefix: CIML
+        number: "56"
+    urn: urn:oiml:ciml:meeting:ciml-56
+    type: plenary
+    year: 2021
+    date_range:
+      start: 2021-10-18
+      end: 2021-10-22
+    localizations:
+      - language_code: eng
+        script: Latn
+        title: 56th CIML Meeting

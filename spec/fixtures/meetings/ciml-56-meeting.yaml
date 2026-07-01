@@ -1,0 +1,90 @@
+---
+# CIML 56th meeting (OIML) — bilingual EN/FR, links to a ResolutionCollection.
+# Mirrors the canonical shape in metanorma/edoxen-model README.
+identifier:
+  - prefix: CIML
+    number: "56"
+urn: urn:oiml:ciml:meeting:ciml-56
+ordinal: 56
+type: plenary
+status: completed
+year: 2021
+
+date_range:
+  start: 2021-10-18
+  end: 2021-10-22
+
+committee: CIML
+general_area: Paris
+city: PAR
+country_code: FR
+
+chair:
+  name: Roman Schwartz
+  role: chair
+secretary:
+  name: Anthony Donnellan
+  role: secretary
+  affiliation: BIML
+  email: secretary@oiml.org
+
+venues:
+  - name: OIML Headquarters
+    address: 11 Rue Turgot, 75009 Paris, France
+    link: https://www.oiml.org/about/contact
+
+source_urls:
+  - ref: https://www.oiml.org/en/structure/ciml/pdf/56-ciml-resolutions-english.pdf
+    format: pdf
+    language_code: eng
+    kind: resolutions_pdf
+  - ref: https://www.oiml.org/fr/structure/ciml/pdf/56-ciml-resolutions-french.pdf
+    format: pdf
+    language_code: fra
+    kind: resolutions_pdf
+
+agenda:
+  status: final
+  source_doc: https://www.oiml.org/en/structure/ciml/pdf/56-ciml-agenda.pdf
+  items:
+    - label: "1"
+      kind: opening
+      title: Opening of the meeting
+      outcome: adopted
+    - label: "2"
+      kind: numbered
+      title: Approval of the agenda
+      outcome: resolved
+      resolution_ref: urn:oiml:doc:ciml:resolution:2021-01
+    - label: "3"
+      kind: numbered
+      title: Approval of the minutes of the 55th CIML Meeting
+      outcome: resolved
+      resolution_ref: urn:oiml:doc:ciml:resolution:2021-02
+
+schedule:
+  - date: 2021-10-18
+    time: "09:00-10:30"
+    event: Opening session
+    room: Salle Turgot
+  - date: 2021-10-22
+    time: "16:00-17:00"
+    event: Closing session
+    room: Salle Turgot
+
+deadlines:
+  - date: 2021-09-30
+    description: Registration via OIML meeting platform
+
+localizations:
+  - language_code: eng
+    script: Latn
+    title: 56th CIML Meeting
+    general_area: Paris, France
+  - language_code: fra
+    script: Latn
+    title: 56e réunion du CIML
+    general_area: Paris, France
+
+resolution_refs:
+  - urn:oiml:ciml:resolution-collection:ciml-56

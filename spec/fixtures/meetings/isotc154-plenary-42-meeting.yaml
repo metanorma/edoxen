@@ -1,0 +1,101 @@
+---
+# ISO/TC 154 42nd plenary meeting week — multi-day, multi-venue, typed hosts.
+# Mirrors the real-world data in isotc154/www.isotc154.org/_data/events/
+# plenary-meeting-42.yml. Trimmed for fixture brevity but representative.
+identifier:
+  - prefix: ISO/TC 154
+    number: "42"
+urn: urn:iso:tc154:meeting:plenary-42
+ordinal: 42
+type: plenary
+status: completed
+year: 2023
+
+date_range:
+  start: 2023-10-24
+  end: 2023-10-27
+
+committee: ISO/TC 154
+committee_group: Plenary
+general_area: Hong Kong, China
+city: HKG
+country_code: HK
+
+venues:
+  - name: Fairmont House (HKMA)
+    address: |
+      14/F, Fairmont House, 8 Cotton Tree Drive
+      Central, Hong Kong, China
+    link: https://www.hkma.org.hk/room_rental/central-admiralty.asp
+
+chair:
+  name: Jianfang Zhang
+  role: chair
+  affiliation: SAC (CNIS)
+secretary:
+  name: Jianfang Zhang
+  role: secretary
+  affiliation: SAC (CNIS)
+  email: zhangjf@cnis.gov.cn
+  phone: "+86-10-58811613"
+host: CALCONNECT / ITCHKSAR
+hosts:
+  - ref: calconnect
+    type: liaison
+  - ref: itchksar
+    type: national_body
+
+source_urls:
+  - ref: https://www.isotc154.org/events/plenary-meeting-42/agenda.pdf
+    format: pdf
+    language_code: eng
+    kind: agenda_pdf
+  - ref: https://www.isotc154.org/events/plenary-meeting-42/minutes.pdf
+    format: pdf
+    language_code: eng
+    kind: minutes_pdf
+landing_url: https://www.isotc154.org/events/plenary-meeting-42/
+registration_url: https://www.iso.org/meeting-platform/42
+
+agenda:
+  status: final
+  items:
+    - label: "1"
+      kind: opening
+      title: Plenary opening
+      outcome: adopted
+      description: Review of ISO/TC 154 work since last plenary meeting
+    - label: "2"
+      kind: numbered
+      title: WG reports
+      outcome: discussed
+      description: WG5, WG6, WG7 reports to plenary
+
+schedule:
+  - date: 2023-10-24
+    time: "9:00-10:30"
+    event: Plenary opening
+    room: Main hall
+    description: Review of ISO/TC 154 work since last plenary meeting
+  - date: 2023-10-24
+    time: "11:00-12:30"
+    event: JWG1 meeting
+    room: Room A
+    description: Discussion of ISO 9735 Implementation Guide
+  - date: 2023-10-27
+    time: "14:30-16:30"
+    event: Plenary closing
+    room: Main hall
+    description: Discussion of plenary resolution and other business
+
+deadlines:
+  - date: 2023-09-30
+    description: Registration via ISO meeting platform
+  - date: 2023-09-30
+    description: Liaison and national body report submissions
+
+localizations:
+  - language_code: eng
+    script: Latn
+    title: 42nd plenary meeting week
+    general_area: Hong Kong, China

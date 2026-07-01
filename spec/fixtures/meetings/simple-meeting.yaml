@@ -1,0 +1,54 @@
+---
+# Minimal Meeting fixture — exercises the core shape without the full
+# real-world decoration. Used by spec/edoxen/meeting_spec.rb.
+identifier:
+  - prefix: TEST
+    number: "1"
+type: plenary
+status: completed
+year: 2024
+
+date_range:
+  start: 2024-01-15
+  end: 2024-01-16
+
+committee: Test Committee
+general_area: Test City
+city: PAR
+country_code: FR
+
+venues:
+  - name: Test Venue
+    address: 1 Test Street, Paris
+
+chair:
+  name: Test Chair
+  role: chair
+
+agenda:
+  status: final
+  items:
+    - label: "1"
+      kind: opening
+      title: Opening
+      outcome: adopted
+    - label: "2"
+      kind: numbered
+      title: Approval of agenda
+      outcome: resolved
+
+schedule:
+  - date: 2024-01-15
+    time: "09:00-10:00"
+    event: Opening session
+    room: Main hall
+
+deadlines:
+  - date: 2024-01-10
+    description: Registration
+
+localizations:
+  - language_code: eng
+    script: Latn
+    title: Test Meeting
+    general_area: Test City
