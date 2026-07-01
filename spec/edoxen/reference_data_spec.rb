@@ -41,4 +41,27 @@ RSpec.describe Edoxen::ReferenceData do
       expect(c).to match(/\A[A-Z][a-z]{3}\z/), "#{c.inspect} is not ISO 15924 shape"
     end
   end
+
+  it "matches UN/LOCODE shape (2-letter country + 3-char location)" do
+    described_class::UNLOCODES.each do |c|
+      expect(c).to match(/\A[A-Z]{2}[A-Z0-9]{3}\z/),
+                   "#{c.inspect} is not UN/LOCODE shape (5-char uppercase)"
+    end
+  end
+
+  it "exposes UN/LOCODEs for cities the fixtures actually use" do
+    expect(described_class::UNLOCODES).to include("FRPAR", "HKHKG", "LULUX", "CNSHA", "THCNM")
+  end
+
+  it "derives the country code from every UN/LOCODE correctly" do
+    described_class::UNLOCODES.each do |loc|
+      country = loc[0, 2]
+      expect(described_class::COUNTRY_CODES).to include(country),
+                                                "UN/LOCODE #{loc} prefixes country #{country} not in COUNTRY_CODES"
+    end
+  end
+
+  it "keeps CITY_CODES as a deprecated alias of UNLOCODES for one release" do
+    expect(described_class::CITY_CODES).to equal(described_class::UNLOCODES)
+  end
 end
