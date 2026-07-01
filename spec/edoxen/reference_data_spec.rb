@@ -1,0 +1,44 @@
+# frozen_string_literal: true
+
+require "spec_helper"
+
+RSpec.describe Edoxen::ReferenceData do
+  it "freezes every list so callers cannot mutate" do
+    described_class.constants(false).each do |name|
+      expect(described_class.const_get(name)).to be_frozen,
+                                                 "Edoxen::ReferenceData::#{name} must be frozen"
+    end
+  end
+
+  it "has no duplicates within a list" do
+    described_class.constants(false).each do |name|
+      values = described_class.const_get(name)
+      dups = values.tally.select { |_, n| n > 1 }.keys
+      expect(dups).to be_empty, "Edoxen::ReferenceData::#{name} has duplicates: #{dups.inspect}"
+    end
+  end
+
+  it "carries the codes the fixtures actually use" do
+    expect(described_class::COUNTRY_CODES).to include("FR", "DE", "CN", "HK", "TH")
+    expect(described_class::LANGUAGE_CODES).to include("eng", "fra", "deu", "rus")
+    expect(described_class::SCRIPT_CODES).to include("Latn", "Cyrl", "Hant")
+  end
+
+  it "matches ISO 3166-1 alpha-2 shape (two uppercase letters)" do
+    described_class::COUNTRY_CODES.each do |c|
+      expect(c).to match(/\A[A-Z]{2}\z/), "#{c.inspect} is not alpha-2"
+    end
+  end
+
+  it "matches ISO 639-3 shape (three lowercase letters)" do
+    described_class::LANGUAGE_CODES.each do |c|
+      expect(c).to match(/\A[a-z]{3}\z/), "#{c.inspect} is not three-letter lowercase"
+    end
+  end
+
+  it "matches ISO 15924 shape (capital + three lowercase letters)" do
+    described_class::SCRIPT_CODES.each do |c|
+      expect(c).to match(/\A[A-Z][a-z]{3}\z/), "#{c.inspect} is not ISO 15924 shape"
+    end
+  end
+end

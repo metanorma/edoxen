@@ -23,6 +23,7 @@ module Edoxen
   autoload :Error, "edoxen/error"
   autoload :ValidationError, "edoxen/error"
   autoload :Enums, "edoxen/enums"
+  autoload :ReferenceData, "edoxen/reference_data"
 
   # Information-model classes (one per file, one concept per class).
   # Names mirror ../edoxen-model/models/*.lutaml.
@@ -45,11 +46,14 @@ module Edoxen
   autoload :Location, "edoxen/location"
   autoload :Person, "edoxen/person"
   autoload :HostRef, "edoxen/host_ref"
+  autoload :ScheduleItemLocalization, "edoxen/schedule_item_localization"
   autoload :ScheduleItem, "edoxen/schedule_item"
   autoload :Deadline, "edoxen/deadline"
   autoload :Reference, "edoxen/reference"
   autoload :AgendaItem, "edoxen/agenda_item"
   autoload :Agenda, "edoxen/agenda"
+  autoload :Attendance, "edoxen/attendance"
+  autoload :VoteRecord, "edoxen/vote_record"
   autoload :MeetingRelation, "edoxen/meeting_relation"
   autoload :MeetingLocalization, "edoxen/meeting_localization"
   autoload :Meeting, "edoxen/meeting"
@@ -58,5 +62,6 @@ module Edoxen
 
   # Services.
   autoload :SchemaValidator, "edoxen/schema_validator"
+  autoload :LinkChecker, "edoxen/link_checker"
   autoload :Cli, "edoxen/cli"
 end

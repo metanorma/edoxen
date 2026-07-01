@@ -14,7 +14,9 @@ MEETING_SCHEMA_ENUM_BINDINGS = {
   "AgendaItemOutcome" => :AGENDA_ITEM_OUTCOME,
   "HostType" => :HOST_TYPE,
   "MeetingRelationType" => :MEETING_RELATION_TYPE,
-  "SourceUrlKind" => :SOURCE_URL_KIND
+  "SourceUrlKind" => :SOURCE_URL_KIND,
+  "ParticipationStatus" => :PARTICIPATION_STATUS,
+  "VoteType" => :VOTE_TYPE
 }.freeze
 
 RSpec.describe "Schema <-> Ruby meeting enum sync" do
