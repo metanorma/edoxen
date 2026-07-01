@@ -1,0 +1,42 @@
+# frozen_string_literal: true
+
+require "spec_helper"
+
+RSpec.describe Edoxen::AgendaItem do
+  describe "LUTAML AgendaItemKind coverage" do
+    Edoxen::Enums::AGENDA_ITEM_KIND.each do |k|
+      it "round-trips kind=#{k}" do
+        payload = { "label" => "1", "kind" => k, "title" => "Item" }
+        ai = described_class.from_yaml(YAML.dump(payload))
+        expect(ai.kind).to eq(k)
+      end
+    end
+  end
+
+  describe "LUTAML AgendaItemOutcome coverage" do
+    Edoxen::Enums::AGENDA_ITEM_OUTCOME.each do |o|
+      it "round-trips outcome=#{o}" do
+        payload = { "label" => "1", "outcome" => o }
+        ai = described_class.from_yaml(YAML.dump(payload))
+        expect(ai.outcome).to eq(o)
+      end
+    end
+  end
+
+  it "carries references as Reference objects" do
+    payload = {
+      "label" => "5.2", "title" => "Standards",
+      "references" => [{ "ref" => "ISO 9735-11", "kind" => "standard" }]
+    }
+    ai = described_class.from_yaml(YAML.dump(payload))
+    expect(ai.references.first).to be_a(Edoxen::Reference)
+    expect(ai.references.first.ref).to eq("ISO 9735-11")
+  end
+
+  it "carries an optional resolution_ref URN" do
+    ai = described_class.from_yaml(YAML.dump(
+                                     "label" => "2", "resolution_ref" => "urn:oiml:doc:ciml:resolution:2021-01"
+                                   ))
+    expect(ai.resolution_ref).to eq("urn:oiml:doc:ciml:resolution:2021-01")
+  end
+end
