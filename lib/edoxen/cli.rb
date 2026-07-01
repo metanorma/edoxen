@@ -125,7 +125,52 @@ module Edoxen
       end
     end
 
+    desc "validate-meetings YAML_FILE_PATTERN",
+         "Validate Meeting/Agenda YAML file(s) against schema/meeting.yaml."
+
+    def validate_meetings(pattern)
+      validator = SchemaValidator.new(meeting_schema_path)
+      Batch.run(self, pattern, header: "🔍 Validating meetings") do |file|
+        schema_errors = validator.validate_file(file)
+        model_errors = collect_meeting_model_errors(file)
+        if schema_errors.empty? && model_errors.empty?
+          Batch::Result.ok("VALID")
+        else
+          errors = (schema_errors + model_errors).map(&:to_clickable_format)
+          Batch::Result.bad(errors)
+        end
+      end
+    end
+
+    desc "normalize-meetings YAML_FILE_PATTERN",
+         "Round-trip Meeting YAML file(s) through the model (--output DIR or --inplace)."
+
+    option :output, type: :string, desc: "Output directory for normalized files"
+    option :inplace, type: :boolean, desc: "Modify files in place (no backup)"
+
+    def normalize_meetings(pattern)
+      unless valid_normalize_options?
+        say normalize_options_error, :red
+        exit 1
+      end
+
+      summary_extra = [
+        ["  Output directory", options[:output]],
+        ["  Mode", options[:inplace] ? "in place" : "--output"]
+      ].compact
+
+      Batch.run(self, pattern, header: "🔄 Normalizing meetings", summary_extra: summary_extra) do |file|
+        Batch::Result.ok(normalize_meeting_file(file))
+      rescue StandardError => e
+        Batch::Result.bad(["#{file}:1:1: #{e.message}"])
+      end
+    end
+
     private
+
+    def meeting_schema_path
+      File.expand_path("../../schema/meeting.yaml", __dir__)
+    end
 
     def collect_model_errors(file)
       ResolutionCollection.from_yaml(File.read(file))
@@ -136,6 +181,30 @@ module Edoxen
         message_text: "Model parsing failed: #{e.message}",
         source: Edoxen::ValidationError::SOURCE_MODEL
       )]
+    end
+
+    def collect_meeting_model_errors(file)
+      load_meeting_document(file)
+      []
+    rescue StandardError => e
+      [Edoxen::ValidationError.new(
+        file: file, line: 1, column: 1,
+        message_text: "Meeting model parsing failed: #{e.message}",
+        source: Edoxen::ValidationError::SOURCE_MODEL
+      )]
+    end
+
+    # A meeting YAML may be either a single Meeting or a
+    # MeetingCollection. Detect by the presence of a top-level
+    # `meetings:` key and parse accordingly. Returns whichever
+    # model object was successfully constructed.
+    def load_meeting_document(file)
+      data = YAML.safe_load(File.read(file), permitted_classes: [Date, Time])
+      if data.is_a?(Hash) && data.key?("meetings")
+        MeetingCollection.from_yaml(File.read(file))
+      else
+        Meeting.from_yaml(File.read(file))
+      end
     end
 
     def extract_yaml_language_server_comment(content)
@@ -165,6 +234,16 @@ module Edoxen
       original = File.read(file)
       yaml_language_server_comment = extract_yaml_language_server_comment(original)
       normalized = ResolutionCollection.from_yaml(original).to_yaml
+      write_normalized(file, normalized, yaml_language_server_comment)
+    end
+
+    def normalize_meeting_file(file)
+      yaml_language_server_comment = extract_yaml_language_server_comment(File.read(file))
+      normalized = load_meeting_document(file).to_yaml
+      write_normalized(file, normalized, yaml_language_server_comment)
+    end
+
+    def write_normalized(file, normalized, yaml_language_server_comment)
       normalized = "#{yaml_language_server_comment}\n#{normalized}" if yaml_language_server_comment
 
       if options[:inplace]
