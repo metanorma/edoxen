@@ -40,6 +40,22 @@ module Edoxen
   autoload :ResolutionMetadata, "edoxen/resolution_metadata"
   autoload :ResolutionCollection, "edoxen/resolution_collection"
 
+  # Meeting / Agenda side. Mirrors edoxen-model/models/meeting*.lutaml.
+  autoload :DateRange, "edoxen/date_range"
+  autoload :Location, "edoxen/location"
+  autoload :Person, "edoxen/person"
+  autoload :HostRef, "edoxen/host_ref"
+  autoload :ScheduleItem, "edoxen/schedule_item"
+  autoload :Deadline, "edoxen/deadline"
+  autoload :Reference, "edoxen/reference"
+  autoload :AgendaItem, "edoxen/agenda_item"
+  autoload :Agenda, "edoxen/agenda"
+  autoload :MeetingRelation, "edoxen/meeting_relation"
+  autoload :MeetingLocalization, "edoxen/meeting_localization"
+  autoload :Meeting, "edoxen/meeting"
+  autoload :MeetingCollectionMetadata, "edoxen/meeting_collection_metadata"
+  autoload :MeetingCollection, "edoxen/meeting_collection"
+
   # Services.
   autoload :SchemaValidator, "edoxen/schema_validator"
   autoload :Cli, "edoxen/cli"
