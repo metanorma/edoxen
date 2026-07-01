@@ -163,9 +163,10 @@ resolutions:
 
 == Command-line interface
 
-The `edoxen` executable exposes two commands.
+The `edoxen` executable exposes four commands — two for Resolution
+collections, two for Meeting/Agenda documents.
 
-=== `validate` — JSON-Schema validation + model parsing
+=== `validate` — JSON-Schema validation + model parsing for Resolutions
 
 [source,sh]
 ----
@@ -179,7 +180,7 @@ problems the schema can't express.
 
 Exit code is non-zero if any file fails.
 
-=== `normalize` — round-trip every fixture through the model
+=== `normalize` — round-trip Resolution YAML through the model
 
 [source,sh]
 ----
@@ -188,8 +189,91 @@ $ edoxen normalize legacy.yaml --inplace
 ----
 
 Loads each YAML file, parses it through the Ruby model, and writes the
-result back. Used to migrate between model versions. Either `--output DIR`
-or `--inplace` is required (mutually exclusive).
+result back. Either `--output DIR` or `--inplace` is required (mutually
+exclusive).
+
+=== `validate-meetings` — validate Meeting/Agenda YAML
+
+[source,sh]
+----
+$ edoxen validate-meetings "spec/fixtures/meetings/*.yaml"
+----
+
+Validates against `schema/meeting.yaml` and parses through
+`Edoxen::Meeting` (single-Meeting files) or `Edoxen::MeetingCollection`
+(wrappers). The schema's root is `oneOf` — both shapes are accepted.
+
+=== `normalize-meetings` — round-trip Meeting YAML through the model
+
+[source,sh]
+----
+$ edoxen normalize-meetings "spec/fixtures/meetings/*.yaml" --output clean/
+----
+
+Same shape as `normalize`, but for Meeting/Agenda documents.
+
+== Meeting & Agenda model
+
+The Meeting model represents the *event* that produces Resolutions,
+plus the agenda document that orders its business. Mirrors
+`edoxen-model/models/meeting*.lutaml`.
+
+[source]
+----
+MeetingCollection
+├── metadata:  MeetingCollectionMetadata
+└── meetings: Meeting[]
+              ├── identifier: StructuredIdentifier[1..*]
+              ├── urn, ordinal, type (MeetingType), status (MeetingStatus), year
+              ├── date_range: DateRange {start, end}
+              ├── committee, committee_group
+              ├── venues: Location[]   (multi-venue supported)
+              ├── general_area, city (IATA), country_code (ISO 3166-1), virtual
+              ├── chair, secretary: Person
+              ├── host, hosts: HostRef[]   (typed: national_body/liaison/associate/organizer)
+              ├── source_urls: SourceUrl[]   (with `kind` discriminator)
+              ├── landing_url, registration_url
+              ├── agenda: Agenda
+              │            ├── identifier, status (AgendaStatus), source_doc
+              │            ├── items: AgendaItem[]
+              │            │            ├── label, kind (numbered/unnumbered/header/opening/closing)
+              │            │            ├── title, description
+              │            │            ├── references: Reference[]
+              │            │            ├── outcome (discussed/resolved/deferred/adopted/withdrawn)
+              │            │            └── resolution_ref (URN link to a Resolution)
+              │            └── opening_session, closing_session: ScheduleItem
+              ├── schedule: ScheduleItem[]   (the time-bound timetable)
+              ├── deadlines: Deadline[]
+              ├── localizations: MeetingLocalization[]   (per-language content)
+              ├── relations: MeetingRelation[]   (continues_from, joint_with, ...)
+              └── resolution_refs: String[]   (URN links to ResolutionCollections)
+----
+
+=== Linking Meetings to ResolutionCollections
+
+Meetings and ResolutionCollections are separate documents joined by URN:
+
+- `Meeting.resolution_refs: [urn:...]`
+- `ResolutionCollection.metadata.meeting_urn: urn:...`
+
+The join is by URN because the two have different lifetimes — agendas
+exist weeks before a meeting, resolutions only after adoption.
+
+=== Lookup accessors (parallel to the Resolution side)
+
+[source,ruby]
+----
+meeting = Edoxen::Meeting.from_yaml(File.read('meeting.yaml'))
+
+meeting.in_language("fra")                  # => MeetingLocalization or nil
+meeting.in_language("deu", fallback: true)  # falls back to first
+meeting.primary_localization                # English-or-first
+meeting.find_agenda_item("5.2")             # AgendaItem by label
+
+collection = Edoxen::MeetingCollection.from_yaml(...)
+collection.find_by_urn("urn:oiml:ciml:meeting:ciml-56")
+collection.find_by_identifier(prefix: "CIML", number: "56")
+----
 
 == Architecture
 
@@ -204,34 +288,33 @@ or `--inplace` is required (mutually exclusive).
   only when the wire name differs from the attribute name.
 * `lib/edoxen/enums.rb` is the single source of truth for every enum
   value used by the gem. Both the Ruby model (`attribute :type, :string,
-  values: Enums::ACTION_TYPE`) and `schema/edoxen.yaml` reference the
+  values: Enums::ACTION_TYPE`) and the schemas reference the
   same constants.
 * `lib/edoxen/error.rb` defines the unified `Edoxen::ValidationError`
   — produced by both `SchemaValidator` (with `source: :schema` or
-  `:syntax`) and by `ResolutionCollection.from_yaml` rescues in the
-  CLI (with `source: :model`). Carries `file`, `line`, `column`,
-  `pointer`, `message_text`, and `source`. The legacy
-  `SchemaValidator::ValidationError` constant is an alias.
+  `:syntax`) and by model parse rescues in the CLI (with `source:
+  :model`). Carries `file`, `line`, `column`, `pointer`,
+  `message_text`, and `source`.
 * `lib/edoxen/schema_validator.rb` is intentionally small: two
   validate methods, a `LineMap` module for line-accurate error
   reporting (longest-prefix match — no path-shape hardcoding), and
   date coercion so `json_schemer` can validate `format: date` against
   YAML-loaded `Date` instances.
-* `lib/edoxen/cli.rb` exposes two Thor commands (`validate`,
-  `normalize`) that delegate their shared scaffolding
+* `lib/edoxen/cli.rb` exposes four Thor commands (`validate`,
+  `normalize`, `validate-meetings`, `normalize-meetings`) that
+  delegate their shared scaffolding
   (expand/sort/empty/header/loop/tally/summary/exit) to the deep
-  `Edoxen::Cli::Batch` module. Adding a third command is a per-file
-  block returning `Batch::Result.ok(msg)` or `Batch::Result.bad(errors)`.
+  `Edoxen::Cli::Batch` module.
 
 === Schema ↔ Ruby invariants
 
-Two runtime specs guard the schema ↔ Ruby boundary:
+Two pairs of runtime specs guard each side of the schema ↔ Ruby
+boundary:
 
-* `spec/edoxen/schema_enum_sync_spec.rb` — every `$defs/<EnumName>.enum`
-  array equals its `Edoxen::Enums::*` frozen counterpart.
-* `spec/edoxen/schema_model_sync_spec.rb` — every Ruby model attribute
-  has a matching `$defs/<ClassName>` property (and vice versa), with
-  matching collection flag.
+* Resolution side: `schema_enum_sync_spec.rb` +
+  `schema_model_sync_spec.rb` against `schema/edoxen.yaml`.
+* Meeting side: `schema_meeting_enum_sync_spec.rb` +
+  `schema_meeting_model_sync_spec.rb` against `schema/meeting.yaml`.
 
 Drift fails CI immediately, not at fixture-validation time.
 
