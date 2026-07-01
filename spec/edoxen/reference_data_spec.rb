@@ -64,4 +64,36 @@ RSpec.describe Edoxen::ReferenceData do
   it "keeps CITY_CODES as a deprecated alias of UNLOCODES for one release" do
     expect(described_class::CITY_CODES).to equal(described_class::UNLOCODES)
   end
+
+  describe ".find_unlocode" do
+    it "returns an Unlocode::Entry for a known code" do
+      entry = described_class.find_unlocode("FRPAR")
+      expect(entry).to be_a(Unlocode::Entry)
+      expect(entry.code).to eq("FRPAR")
+      expect(entry.country).to eq("FR")
+    end
+
+    it "accepts lowercase input (coerces to uppercase)" do
+      expect(described_class.find_unlocode("frpar")&.code).to eq("FRPAR")
+    end
+
+    it "returns nil for an unknown code" do
+      expect(described_class.find_unlocode("ZZZZZ")).to be_nil
+    end
+
+    it "returns nil for empty input" do
+      expect(described_class.find_unlocode("")).to be_nil
+      expect(described_class.find_unlocode(nil)).to be_nil
+    end
+  end
+
+  describe ".unlocode_exists?" do
+    it "is true for a known code" do
+      expect(described_class.unlocode_exists?("FRPAR")).to be true
+    end
+
+    it "is false for an unknown code" do
+      expect(described_class.unlocode_exists?("ZZZZZ")).to be false
+    end
+  end
 end

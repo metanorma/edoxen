@@ -68,5 +68,15 @@ module Edoxen
     def find_agenda_item(label)
       agenda&.find_item(label)
     end
+
+    # Resolve the meeting's UN/LOCODE via the canonical `unlocode` gem
+    # registry. Returns an `Unlocode::Entry` (with `#name`, `#country`,
+    # `#coordinates`, `#iata`, `#functions`, etc.) or nil when the
+    # city field is empty / not in the registry.
+    def city_entry
+      return nil if city.nil? || city.to_s.empty?
+
+      Edoxen::ReferenceData.find_unlocode(city)
+    end
   end
 end
