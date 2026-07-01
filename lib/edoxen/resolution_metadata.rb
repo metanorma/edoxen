@@ -18,5 +18,13 @@ module Edoxen
     # collections without a parent meeting (e.g., ad-hoc resolution
     # sets) simply omit it.
     attribute :meeting_urn, :string
+
+    # Resolve the collection's host-city UN/LOCODE via the canonical
+    # `unlocode` gem registry. Returns an `Unlocode::Entry` or nil.
+    def city_entry
+      return nil if city.nil? || city.to_s.empty?
+
+      Edoxen::ReferenceData.find_unlocode(city)
+    end
   end
 end

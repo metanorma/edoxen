@@ -166,6 +166,24 @@ module Edoxen
       end
     end
 
+    desc "unlocode CODE", "Resolve a UN/LOCODE via the canonical registry."
+    def unlocode(code)
+      entry = Edoxen::ReferenceData.find_unlocode(code)
+      if entry.nil?
+        say "No entry for #{code.upcase} in the UN/LOCODE registry.", :red
+        exit 1
+      end
+
+      say "UN/LOCODE:  #{entry.code}", :blue
+      say "  Name:      #{entry.name}"
+      say "  Country:   #{entry.country}"
+      say "  Subdiv:    #{entry.subdivision}" if entry.subdivision
+      coords = entry.coordinates
+      say "  Coords:    #{coords}" if coords
+      funcs = entry.functions.compact.map(&:to_s)
+      say "  Functions: #{funcs.join(", ")}" unless funcs.empty?
+    end
+
     private
 
     def meeting_schema_path

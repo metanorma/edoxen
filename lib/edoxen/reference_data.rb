@@ -3,15 +3,13 @@
 module Edoxen
   # Built-in reference data for ISO codes used across the Edoxen model:
   # ISO 3166-1 alpha-2 country codes, ISO 639-3 language codes, ISO
-  # 15924 script codes, and UN/LOCODEs for the cities where ISO/TC 154
-  # and OIML actually meet.
+  # 15924 script codes, and UN/LOCODEs.
   #
-  # Frozen, alphabetically sorted, single source of truth. The intent
-  # is not to be exhaustive — it is to be enough that typos in real
-  # fixtures surface immediately via the corresponding spec.
-  #
-  # When a real consumer needs a value that's not here, add it AND
-  # update the corresponding spec; both lists must stay in lockstep.
+  # UN/LOCODE lookups delegate to the `unlocode` gem (the canonical
+  # Ruby registry of the UNECE UN/LOCODE dataset). The frozen
+  # ReferenceData::UNLOCODES list stays as a curated offline subset
+  # — used by specs and consumers that don't want to load the full
+  # ~100k-entry registry.
   #
   # Reference data sources:
   # * https://www.iso.org/iso-3166-country-codes.html
@@ -24,6 +22,12 @@ module Edoxen
   # Kong; THCNM = Chiang Mai). UN-maintained, supersedes the
   # airport-centric IATA city codes edoxen previously used.
   module ReferenceData
+    # Hard require the unlocode gem. It's a declared runtime dep, so a
+    # clean install of edoxen brings it in. The bundled dataset ships
+    # 4 sample entries; full coverage requires `rake unlocode:fetch`
+    # from the unlocode gem.
+    require "unlocode"
+
     # ISO 3166-1 alpha-2 — countries ISO/TC 154 / OIML / BIPM operate in.
     # Two-letter uppercase.
     COUNTRY_CODES = %w[
@@ -45,14 +49,10 @@ module Edoxen
       Arab Cyrl Hans Hant Hang Hebr Jpan Kore Latn
     ].freeze
 
-    # UN/LOCODEs — 5-character (2-letter country + 3-char location)
-    # for cities where ISO/TC 154 or OIML has actually held a meeting,
-    # plus the major hubs their members transit. Drawn from the UNECE
-    # UN/LOCODE code list (2025-1).
-    #
-    # Mapping is city-to-LOCODE: the LOCODE sometimes names the
-    # airport or seaport rather than the city itself, but for
-    # meeting-venue purposes the closest LOCODE is correct.
+    # Curated offline subset of UN/LOCODEs — the cities ISO/TC 154 and
+    # OIML actually meet in plus the major transit hubs. Used by specs
+    # and consumers that don't want to load the full registry. For
+    # arbitrary lookups, use {find_unlocode}.
     UNLOCODES = %w[
       AUMEL ATVIE BEBRU BGSOF BRBSB CHGVA CNCAN CNHKG CNSHA CNXSZ COCTG
       CYLCA CZPRG DEBER DEHAM DEFRA DKCPH ESMAD FIHEL FRARC FRLYS FRMRS
@@ -65,5 +65,31 @@ module Edoxen
     # @deprecated Use {UNLOCODES}. Retained for one release to ease
     # migration; will be removed in the next minor.
     CITY_CODES = UNLOCODES
+
+    class << self
+      # Look up a UN/LOCODE entry via the canonical `unlocode` gem.
+      # Returns an `Unlocode::Entry` (with `#name`, `#country`,
+      # `#coordinates`, `#iata`, `#functions`, etc.) or nil when the
+      # code is not in the registry.
+      #
+      # Requires the full UN/LOCODE dataset to be loaded. The gem
+      # ships a 4-entry sample by default; run `rake unlocode:fetch`
+      # from the unlocode gem to populate the full ~100k-entry
+      # registry.
+      #
+      # @param code [String, #to_s] 5-character UN/LOCODE
+      # @return [Unlocode::Entry, nil]
+      def find_unlocode(code)
+        Unlocode.find(code.to_s.upcase)
+      end
+
+      # True when the code resolves to a real UN/LOCODE entry via the
+      # canonical registry. Use this when validating user-supplied
+      # city codes; use the schema's pattern check for cheap shape
+      # validation.
+      def unlocode_exists?(code)
+        !find_unlocode(code).nil?
+      end
+    end
   end
 end
