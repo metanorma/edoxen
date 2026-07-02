@@ -21,6 +21,6 @@ permissions:
 
 jobs:
   release:
-    uses: metanorma/ci/.github/workflows/rubygems-release.yml@main
+    uses: metanorma/ci/.github/workflows/rubygems-release.yml@fix/oidc-auto-discovery-preflight
     with:
       next_version: ${{ github.event.inputs.next_version }}
