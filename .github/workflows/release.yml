@@ -28,14 +28,11 @@ jobs:
       - name: Configure RubyGems OIDC Trusted Publishing
         uses: rubygems/configure-rubygems-credentials@v1.0.0
 
-      - name: Bump version (if not skip)
-        if: github.event.inputs.next_version != 'skip'
+      - name: Release
         run: |
           gem install gem-release
-          gem bump --version ${{ github.event.inputs.next_version }} --tag --push
-
-      - name: Build gem
-        run: bundle exec rake build
-
-      - name: Publish to rubygems.org
-        run: gem push pkg/*.gem
+          REQUESTED="${{ github.event.inputs.next_version }}"
+          if [ "$REQUESTED" != "skip" ] && [ -n "$REQUESTED" ]; then
+            gem bump --version "$REQUESTED"
+          fi
+          bundle exec rake release
